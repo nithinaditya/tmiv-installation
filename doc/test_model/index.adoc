@@ -1,0 +1,47 @@
+= Test Model 8 for MPEG Immersive Video
+:eqnums: all
+:front-cover-image: image:cover_page.pdf[]
+:imagesdir: images
+:imagesoutdir: {imagesdir}/generated_images
+:sectnums:
+:sectnumlevels: 4
+:stem: latexmath
+:xrefstyle: short
+
+**Editors**:
+mailto:basel.salahieh@intel.com[Basel Salahieh],
+mailto:joeljung@tencent.com[Joel Jung],
+mailto:adrian.dziembowski@put.poznan.pl[Adrian Dziembowski],
+mailto:christoph.bachhuber@nokia.com[Christoph Bachhuber]
+
+:leveloffset: +1
+
+include::chapters/abstract.adoc[]
+
+include::chapters/1_introduction.adoc[]
+
+include::chapters/2_scope.adoc[]
+
+include::chapters/3_terms_and_definitions.adoc[]
+
+include::chapters/4_encoder.adoc[]
+
+include::chapters/5_renderer.adoc[]
+
+include::chapters/references.adoc[]
+
+include::chapters/annex.adoc[]
+
+:leveloffset: -1
+
+// This causes captions to be aligned the same way images are, but only in HTML.
+// It would be rendered to PDF, suppressing that with the if clause
+ifndef::backend-pdf[]
+++++
+<style>
+  .imageblock > .title {
+    text-align: inherit;
+  }
+</style>
+++++
+endif::[]

@@ -1,0 +1,4 @@
+:xrefstyle: short
+:sectnums:
+:stem: latexmath
+ifndef::imagesdir[:imagesdir: ../images]

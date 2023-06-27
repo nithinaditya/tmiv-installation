@@ -1,0 +1,828 @@
+include::common_attributes.adoc[]
+
+= Description of encoder processes
+
+== Introduction
+
+The TMIV encoder has a “group-based” encoder, described in <<imgGroupBasedEncoder>>, at higher level which invokes for each group a “single-group” encoder described in <<imgSingleGroupEncoder>>.
+The group-based encoder has the following stages: 
+
+. Preparation of source material by:
+** Assessing the geometry (depth map) quality, if present, for each source view.
+** Splitting source views in groups.
+** Synthesizing an inpainted background view covering the whole field of view of the source views within each group.
+** Labeling source views as basic view or additional view.
+. Encoding of each group separately (using the associated subset of split source views).
+. Formatting of the bitstream (includes a merging substage to combine sub bitstreams of same type produced by each single-group encoder together) which is V3C sample stream with MIV extensions and related SEI messages.
+. Encoding video sub bitstream: 
+.. HEVC encoding of video sub bitstreams (each separately) using HM. The presence of geometry video data (GVD), attribute video data (AVD) or occupancy video data (OVD) depends on the encoder configuration.
+.. VVC encoding of video sub bitstreams (each separately) using VVenC. The presence of GVD, AVD or OVD depends on the encoder configuration.
+. If packed video is enabled and video sub bitstreams are VVC encoded, then GVD, AVD, and OVD can be combined into packed video data (PVD).
+. Multiplexing to combine the formatted bitstream with the video sub bitstream into a single MIV-complied bitstream.
+
+.Top-level diagram of the TMIV group-based encoder
+[#imgGroupBasedEncoder]
+image::4_encoder/group_based_encoder.svg[align=center]
+
+The single-group encoder acts on the selected source views for a given group and has the following stages:
+
+. Automatic parameter selection to set the atlas parameters (i.e. number of atlases, and the frame size of each of the atlases).
+. Separation of views into _entity_ layers (optional stage).
+
+. Pruning of redundant information, aggregating the pruned masks over an intra-period. and clustering of preserved pixels for each group and entity.
+. Packing of patches and generation of video data per group (<<imgSourceViewRepr>>).
+. Quantization and scaling of geometry video data per atlas, if present.
+. Scaling of occupancy video data per atlas, if present.
+
+The remainder of this section explains the encoder input, output and each of the encoder processes in more detail.
+
+.Top-level diagram of the TMIV single-group encoder
+[#imgSingleGroupEncoder]
+image::4_encoder/single_group_encoder.svg[align=center]
+
+.Representing source views using patch atlases
+[#imgSourceViewRepr]
+image::4_encoder/source_views_using_patch_atlases.svg[align=center]
+
+At the 132^th^ MPEG meeting, multi-plane images <<viewSynthesis>> have been introduced to TMIV supporting an alternative coding mechanism that uses transparency layers.
+
+== Encoder inputs
+
+The input to the TMIV encoder consists of a list of source views (<<imgSourceViews3>>).
+The source views represent projections of a 3D real or virtual scene.
+The source views can be in equirectangular, perspective, or orthographic projection.
+Each source view should at least have view parameters (camera intrinsics, camera extrinsics, geometry quantization, etc.).
+A source view may have a geometry component in the form of 8-16 bits raw video with range/invalid sample values.
+Also a source view may have texture attribute component in the form of YC~B~C~R~ 4:2:0 10 bits.
+Additional optional attributes per source view are an entity map and a transparency attribute component.
+The set of components has to be the same for all source views.
+
+.Input source views composed of texture attribute and geometry components, and entity maps
+[#imgSourceViews3]
+image::4_encoder/source_view_composition.svg[align=center]
+
+== Encoder outputs
+
+The output of the TMIV encoder is a single file according to the V3C sample stream format containing a single V3C sequence.
+Most parameter sets have MIV extensions enabled and common atlas data is present.
+The view parameter list is sent once and depth quantization parameters (if present) are updated at each intra frame.
+For each of the regular atlases, there are sub bitstreams with patch data, geometry video data (if present), attribute video data (if present), occupancy video data (if present), and packed video data (if present).
+An atlas may be composed of multiple atlas tiles.
+Atlas and patch parameters include groups and entity ID's respectivelyfootnote:[There may be only one group and/or entity in which case group-based and/or entity-based coding is effectively disabled.].
+
+The structure of a V3C bitstream (<<imgV3cMivStructure>>) is as follows:
+
+* The V3C bitstream consists of a V3C unit stream (with carriage out of scope) or a V3C sample stream which is a simple container for a V3C unit stream. 
+** At the start of the V3C unit stream, the V3C parameter set (VPS) is available in-band or out-of-band. The information in the VPS announces the presence of sub bitstreams, allowing the decoder to initialize sub decoders for all atlas and video sub bitstreams.
+** Each subsequent V3C unit has a payload that contains one or more access units of a sub bitstream. The V3C unit header identifies to which sub bitstream the payload applies.
+* The geometry video data (GVD), attribute video data (AVD), and occupancy video data (OVD) V3C units contain video sub bitstreams for a specific atlas component. While the standard is video codec agnostic, for the test model the video sub bitstreams are always HEVC Annex B or VVC sub bitstreams.
+* TMIV also supports packed video data (PVD) V3C units that pack various video data types of various atlas tiles together.
+* The atlas data (AD) V3C unit contains an atlas sub bitstream which is also a network abstraction layer (NAL) unit stream, but instead of video frames there is a NAL unit called atlas tile layer (ATL) that carries a list of patch data units (PDU). Each PDU describes the relation between a patch in an atlas and the same patch in a (hypothetical) source view. The ATL is parameterized using the atlas sequence parameter set (ASPS), atlas adaptation parameter set (AAPS), and atlas frame parameter set (AFPS). 
+* The common atlas data (CAD) V3C unit also contains an atlas sub bitstream, but the main NAL units are the common atlas sequence parameter set (CASPS) and  the common atlas frame (CAF) that contains the view parameter list or updates thereof.
+* All sub bitstreams may contain SEI messages and both the CASPS MIV extension and ASPS may contain volumetric usability information (VUI). 
+
+
+.Structure of the V3C bitstream with MIV extensions. Some aspects of V3C that are not relevant to MIV have been omitted for clarity
+[#imgV3cMivStructure]
+image::4_encoder/v3c_miv_structure.svg[align=center]
+
+== Distribution of source views in groups
+
+Source views can be divided into multiple groups.
+The grouping helps outputting local coherent projections of important regions (e.g. belonging to foreground objects or occluded regions) in the atlases per group as oppose to having fewer samples of those regions when processing all source views as a single group. 
+An automatic process is implemented to select views per group, based on the view parameters list and the number of groups to obtain.
+The source views are being distributed accordingly in multiple branches, and each group is encoded independently of each other. 
+
+Source splitting operates as follows: a views pool including all available source views is formed and the number of views per group is set (by dividing the number of source views by the number of groups).
+The view parameters list is used to identify the range the views are spanning in Cartesian scene coordinates.
+The dominant coordinate axis is selected as a basis to set key positions.
+Key positions are located at the maximum view positions of the dominant axis across view in the views pool.
+Distances of views to these key positions are computed.
+Based on the number of views for the group, the closest views to the first key position are selected and removed from the views pool.
+Then a second key position is identified and the process is repeated covering the distribution of all source views across the chosen number of groups.
+
+[[secEncoderInpainting]]
+== Synthesizing an inpainted background view
+
+This inpainting module is intended to create synthetic texture and geometry data that is hidden from the source views.
+Thereby reducing the missing data problem at the decoder-side.
+For this purpose it creates an ERP view with inpainted background data.
+This view has the following properties: 
+It's position is the center, i.e. the mean of the source camera positions;
+It's field-of-view is the union of source view field-of-views (with some additional margin);
+Since the quality of the inpainted regions is lower than the original content, it's resolution is typically chosen to be lower than that of the source views.
+Hereby saving on bit- and pixelrate.
+This resolution is configurable.
+
+The following steps are taken:
+		
+. A background view is synthesized from all available source views. 
+The 'RVS-based synthesizer', see <<secRvsSynthesizer>> is used with a negated depthParameter, i.e. rendering background (when available) over foreground. 
+<<imgSynthesizeInpaintedBackground>> illustrates this: The left image shows synthesis with a normal (positive) depthParameter where foreground is rendered over background.
+The middle image shows synthesis with a negated depthParameter where background is rendered over foreground.
+It de-occludes background region 'A' that is visible from the source views.
+. Some pixels of the synthesized background view have no correspondence in the source views, hence their depth values are set to 0. Those pixels are inpainted in a later process.
+As an intermediate step, remaining foreground pixels are identified and removed as follows:
+.. The synthesized depth frame -represented by normalized disparities- is filtered using a box blur with a configurable kernel size. 
+This blurred depth frame is used for comparing with the actual synthesized depth frame. 
+Actual depth values that are closer indicate relative foreground and actual depth values that are farther, indicate relative background.
+.. The relative foreground pixels are identified by comparison using some configurable threshold. 
+They identify remaining foreground pixels that occlude background.
+Their depth values are set to zero which yields a mask of missing background pixels.
+These are indicated by region 'B' in the right image of <<imgSynthesizeInpaintedBackground>>
+. The masked texture and depth data are inpainted from neighboring areas.
+The ‘PushPullInpainter’ (<<secPushPullInpainter>>) is used for this purpose.
+
+The inpainted background view is identified by a Boolean flag so it is used for filling missing pixels at the decoder side.
+This flag is either located at the patch (pdu) level or at the view (mvp) level depending on the configuration.  
+
+.Steps in finding an inpaint mask for synthesizing an inpainted background view.
+[#imgSynthesizeInpaintedBackground]
+image::4_encoder/synthesizing_inpainted_background_view.svg[width=80%,align=center]
+
+[[secPushPullInpainter]]	
+=== PushPullInpainter
+The push-pull inpainter is similar to the method that is used to pad texture patches in V-PCC <<vpccCodec>>.
+The input resolution for the push-pull inpainter is the resolution of the above described background view that can be lower than the source views.
+
+. Push: Starting from the input resolution, the resolution is repeatedly halved (rounding up) with linear interpolation of texture and depth (with border repeat), until the top of the pyramid is an image of 1 × 1 pixel.
+. Pull: Starting with the second-smallest image, when depth is larger than zero, the texture and depth is preserved.
+Otherwise, texture and depth are averaged over the neighboring samples of the higher layer (with border repeat) that have non-zero depth.
+When none such samples exist, the zero depth is maintained.
+. The output of the algorithm is the filtered frame at input resolution.
+
+
+== View labeling
+
+The view labeling is split in two independent parts: view selection (<<secViewSelection>>) and basic view allocation (<<secBasicViewAllocation>>).
+
+[[secViewSelection]]
+=== Two operating modes for view selection
+
+The view labeler receives source view parameters for all source views (<<imgGroupBasedEncoder>>) and based on that each source view is labeled as basic or additional (<<secBasicViewAllocation>>).
+There are two modes for view selection, which allows to study the benefit of supplementing complete views with patches.
+
+In the first mode, all source views are output, and they are labeled as basic or additional views (<<imgViewSelectionWithAdditional>>).
+The encoding result is one or more atlases with complete views and patches taken from the additional views.
+
+.View selection behavior of the view labeler when additional views are enabled.
+[#imgViewSelectionWithAdditional]
+image::4_encoder/view_selection.svg[align=center]
+
+
+In the second mode, only basic views are output (<<imgViewSelectionWithoutAdditional>>). The encoding result is one or more atlases with only complete views.
+
+.View selection behavior of the view labeler when additional views are not enabled
+[#imgViewSelectionWithoutAdditional]
+image::4_encoder/view_selection_no_additional.svg[align=center]
+
+[[secBasicViewAllocation]]
+=== Basic view allocation
+
+The labeling of basic views consists of the following steps:
+
+. Determine the number of basic views (hence “allocation”),
+. Prepare cost calculation,
+. Select initial basic views,
+. Update the view labels.
+
+The inpainted view is labeled 'additional'.
+
+[[secNumberOfBasicViews]]
+==== Determine the number of basic views
+
+In the data processing flow of the test model, the atlas frame size calculation (<<secFrameSizeCalculation>>) is performed after view labelingfootnote:[Reordering of the data processing flow is a subject of study in MIV CE-2.8 ++[++WG11N19486++]++].
+Part of the atlas frame size calculation logic is repeated to estimate how many basic views there could be within pixel rate constraints:
+
+. The number of encoded atlases is assumed to be equal to the configured maximum number of atlases divided by the configured number of groups.
+. The maximum allowed number of atlas samples that is available to the encoder is the product of the number of encoded atlases and the configured maximum number of samples per atlas (_M_).
+Note that the number of samples per atlas corresponds to the luma picture size of the texture attribute video data.
+. The maximum number of atlas samples that all basic views together may use (_N_) is a configurable fraction of the total allowance.
+For instance, when this fraction is 50% and there are two atlases, then all basic views will fit in the first atlas.
+. The number of basic views is determined by iterating over source views in order of decreasing sample count per source view.
+While iterating, the total number of samples is counted as well as the number of samples in the first atlas.
+When there are _K_ atlases, the first, 1 + _K_’th, 1 + 2 _K_’th, etc. source views are assigned to the first atlas.
+The number of basic views corresponds to the largest number of source views that still fit in terms of the maximum number of samples _N_ and the maximum number of samples per atlas _M_. 
+
+Assumptions are:
+
+. The number of basic views is constrained by the number of atlases (per group) and the luma picture size, but not by the sample rate.
+. The size and aspect ratio of the source views is such that they can be packed efficiently. (It is sufficient to count samples, instead of performing trail packings.)
+
+Finally, the number of basic views is limited to ensure that some source views are either pruned or non-coded.
+This allows to preserve meaningful objective evaluation on source view positions.
+
+==== Prepare cost calculation
+
+The basic view allocation is based on the partitioning around medoids (PAM) algorithm (https://en.wikipedia.org/wiki/K-medoids[k-medoids]) with basic views as _k_ medoids among _n_ source views but modified to use a repulsion/attraction cost function.
+
+The cost function requires a distance metric on source views.
+While the previous view labeling method in TMIV 5 [WG11N19213] used viewport overlap as a measure of source view similarity, the current view labeler only uses the position of each source view to discriminate source views.
+The distance matrix is thus:
+
+[stem]
+++++
+R = \lfloor{r_{i,j}^2}\rfloor
+++++
+
+
+whereby stem:[r_{i,j}^2] is the squared distance stem:[m^2] between the source view positions. 
+
+The idea of the repulsion/attraction (<<imgRepulsionMedoids>>) is that the full configuration of source views is considered.
+The repulsion of medoids is always stronger than the attraction of medoids to source views: when there is only one medoid the cost is based only on attraction, and when there are multiple medoids, the cost is based only on repulsion.
+This avoids a parameter to balance the "forces".
+
+.Repulsion of medoids v2 and v3 and v14 (left) and attraction of medoid v3 to non-medoids (right) for ClassroomVideo content
+[#imgRepulsionMedoids]
+image::4_encoder/medoid_repulsion_and_attraction.png[align=center]
+
+
+For medoids stem:[\{c_1 ... c_k\}], the repulsion cost is:
+
+[stem]
+++++
+J = 2 \sum_{1 \leq i < k, \\i < j \leq k} r_{c_i, c_j}^{-2}
+++++
+
+For medoid c, the (negative) attraction cost is:
+
+[stem]
+++++
+J = - \sum_{1 \leq i < c, \\c < i \leq n} r_{c, i}^{-2}
+++++
+
+==== Select initial basic views
+
+Some of the source view configurations (especially CG) exhibit symmetry, resulting in multiple solutions with equal cost.
+To avoid arbitrary selection (undefined behavior) or selection based on multi-view calibration artefacts, pseudo-random initialization is avoided, and instead the initial medoid is selected as the source view that is closest to the following scene position (<<imgBasicViewSelection>>):
+
+. Maximum _x_ value over all source view positions (tangent x-plane),
+. Average _y_ value over all source view positions,
+. Average _z_ value over all source view positions.
+
+The assumption is made that stem:[+x] is the forward direction, which is the OMAF convention (cf. <<secOmaf>>).
+Subsequent medoids (if any) are selected one-by-one by adding the medoid that minimizes the repulsion cost.
+
+.Initial basic view selection
+[#imgBasicViewSelection]
+image::4_encoder/basic_views_selection.svg[align=center]
+
+==== Update the view labels
+
+At each iteration, all possible swaps between a medoid (basic view) and non-medoid (additional view) are evaluated.
+The swap that achieves the largest cost reduction is executed.
+Iteration stops when cost reduction is no longer possible.
+
+== Automatic parameter selection
+
+Some of the parameters of the TMIV encoder are automatically calculated based on the camera configuration or at most the first frame of the source views.
+This section describes these processes.
+
+[[secGeometryQuality]]
+=== Geometry quality assessment
+
+The quality of the geometry (if present) is assessed automatically based on the first frame of the geometry component.
+Each input view is reprojected to the position of all remaining input views.
+Then, for every reprojected pixel it is checked if reprojected geometry value is higher than a threshold of geometry value of collocated pixel or any of its neighbors in the target view (in a 3×3 neighborhood).
+If this condition is not fulfilled, the pixel is counted as inconsistent.
+If the number of inconsistent pixels between any pair of input views is higher than a threshold the quality of the geometry is supposed to be low.
+
+[[secFrameSizeCalculation]]
+=== Atlas frame size calculation
+
+In V3C, each atlas has a frame size to which all components (atlas data, occupancy video data, geometry video data, and attribute video data) are scaled up as part of the reconstruction.
+The block to patch map is scaled down by the block size with patch positions and sizes aligned by this amount.
+In MIV, the attribute video data is always at nominal resolution, the geometry video data (if present) is scaled down by an integer factor stem:[N \geq 1], and the occupancy video data (if present) is scaled down (usually to the block to patch map’s resolution unless specified in the configuration file).
+
+The encoder calculates the number of atlases per group and atlas frame size automatically.
+This computation is related to constraints on the maximum size of a picture (considering the luma only), the maximum sample rate (in Hz) of the luma, and a total number of allowed decoder instantiations.
+
+Taking into account the MIV restrictions, and assuming there is one attribute, geometry is present, occupancy is embedded in geometry, and no frame packing, the following applies:
+
+* number of atlases = number of atlases per group ∙ number of groups,
+* luma picture size = atlas frame width ∙ atlas frame height,
+* luma sample rate = stem:[\left(1 + 1/N^2\right)] luma picture size ∙ frame rate ∙ number of atlases,
+* number of decoder instantiations = 2 ∙ number of atlases.
+
+To meet the constraints, the following algorithm is applied:
+
+. The atlas frame width is set to the widest source view,
+. The number of atlases per group is set high enough to reach or exceed the maximum luma sample rate, but within the maximum number of atlases,
+. The atlas frame height is set as large as possible within the constraints.
+
+The calculations are aligned on the block size.
+
+Without those constraints, there is one atlas per source view and the nominal atlas resolution of each atlas is set equal to the resolution of the corresponding source view.
+This enables complete (unconstrained) transmission of all source views.
+
+== Separation into entity layers
+
+TMIV has the ability to operate in entity coding mode when entity maps are provided for the source views.
+In this mode, the patches extracted and packed within the atlases have active pixels that belong to a single entity per patch, thus it is possible to tag each patch with its associated entity ID.
+This enables selective encoding and/or decoding of entities separately if desired resulting in savings in utilized bandwidth and improved quality.
+If entity coding mode is chosen, then the source views (attribute and geometry components) including the basic ones are sliced into multiple layers such that each layer includes content belong to one entity at a time.
+Then following encoding stages are invoked for each entity independently such that the layers across all views that belong to the same entity are pruned, aggregated, and clustered together.
+The packing combines patches of all entities together in one set of atlases.
+
+== Pixel pruning
+
+A multiview representation of a scene inherently has interview redundancy.
+The pruner selects which areas of the views may be safely pruned.
+The pruner operates on a per-frame basis, receiving multiple views with attribute and geometry components and camera parameters, and outputting masks per view and frame of the same size.
+For additional views, mask values are either 'pruned' or 'preserved'.
+For basic views, all pixels are 'preserved'.
+
+The method has been devised with the following goals in mind:
+
+* Remove redundancy between all pairs of views,
+* Prefer fewer larger patches,
+* Maintain a realistic complexity,
+* Consider temporal consistency.
+
+[[secPruningGraph]]
+=== Pruning graph
+
+In order to determine interview redundancy, the pruner performs data projection between input views.
+To achieve the first two goals, the pruner creates a pruning graph, which defines hierarchy of view pruning (<<imgPruningGraph>>).
+The pruning graph is created in a greedy fashion, which allows to achieve the third goal.
+
+.Pruning graph for one basic and three additional views. Basic view is assigned to a root node (node id: _N~0~_), each additional view is assigned to a node _N~i~_, which is a child node of all nodes _N~j~_ where _j < i_
+[#imgPruningGraph]
+image::4_encoder/pruning_graph.png[width=25%,align=center]
+
+Pruning graph creation:
+
+. Insert basic views into the pruning graph (as root nodes). 
+. Project all pixels of all basic views to each additional view.
+. Create the _pruning mask_ for each additional view (cf. <<secPruningMask>>).
+. Select the additional view with maximum number of preserved pixels (to prefer larger patches).
+. Insert selected additional view into the pruning graph (as a child node of all nodes already in graph) and stop if all the views are assigned to nodes in the pruning graph.
+. Project all preserved pixels of selected view to remaining additional views.
+. Update the _pruning mask_ for each remaining additional view.
+. Go to 4.
+
+The temporal consistency is maintained due to the preservation of the view hierarchy over time.
+The pruning graph can change only if view parameter list changes (only at the first frame in the current test model).
+
+The pruning graph is transmitted as part of the view parameters.
+
+=== Pruning cluster graph
+
+The computational complexity of the pruner depends primarily on the number of basic views and additional views in a graph, because each basic view is synthesized to each additional view.
+The maximum complexity occurs when there are about as much basic views as there are additional views.
+To reduce the computational complexity, the pruner separates the basic views into clusters having at most a configurable amount of basic views per cluster.
+Each cluster is pruned independently, thus reducing the number of basic views per additional view, at the expense of more active pixels in total. 
+
+Additional views are assigned based on two conditions: a) balance the number of views per cluster, b) maximize overlap with one of the basic views in the cluster.
+Because the number of basic views and clusters is limited, exhaustive search can be performed.
+The score of a solution is based on the sum of overlaps, and the solution with the maximum score is selected.
+
+An example of a pruning cluster graph is provided in <<imgClusterGraph>>, with six basic views (yellow) and three additional views (white). The cluster graph consists of two disjoint graphs, and should be read like this:
+
+* v2 is pruned by v0, v1 and v3.
+* v4 is pruned by v5, v7 and v8.
+* v6 is pruned by v5, v7, v8 and v4.
+
+.Cluster graph of SP, with notation
+[#imgClusterGraph]
+image::4_encoder/pruning_cluster_graph.svg[align=center]
+
+[[secPruningMask]]
+=== Pruning mask creation
+
+The pruner uses three criteria to determine if a pixel may be pruned:
+
+* The pixel should be synthesized from the views higher up in the hierarchy (it should be preserved in view assigned to parent node and pruned in view assigned to child node).
+* The difference between synthesized and source geometry should be less than a threshold.
+* The minimum difference between luma of a synthesized pixel and luma of all pixels within a collocated source 3×3 block should be less than a pruning luma threshold (cf. <<secPruningLuma>>).
+
+Then, as a second-pass process, the pruner updates the pruning mask that was created during the initial pruning stage and re-identify the pixels that are not to be pruned among the pixels that were initially determined to be pruned.
+The main object of this process is to consider the global color component differences that can exist among different source views.
+The procedure is as follows and is applied for each pruning pair:
+
+* With respect to the pixels that were determined to be pruned, pixel-by-pixel color differences are calculated between the synthesized view from the parent node and the source view assigned to the child node. 
+* By using the least squares method, the fitting function that can optimally model these color differences is calculated.
+* The pixels that comply with this fitting function within certain range defined by a threshold are judged as the inliers and those pixels are remained as to be pruned. Meanwhile, the outliers are updated as not to be pruned within the pruning mask.
+
+A mask typically has holes and irregularities which are cleaned up by a classical iterative erosion and dilation method on a 3×3 structuring element: 
+
+* For the erosion, a pixel that has at least one empty neighbor is reset.
+* For the dilation, a pixel that has at least one non-empty neighbor is activated.
+
+When creating the pruning masks of a single entity, only pixels that are part of the entity layer are activated.
+This includes the pruning masks of the basic views.
+
+[[secPruningLuma]]
+=== Pruning luma threshold calculation
+
+The pruning luma threshold (<<secPruningMask>>) adapts to sequence characteristics, i.e. noise level.
+The base value of pruning luma threshold (set in the configuration file) is modified by a global luma standard deviation.
+The standard deviation is calculated for the first frame of the sequence, during the geometry quality assessment step. 
+
+At first, an empty set **A** is created.
+In order to populate the set **A**, first of all, all pixels are reprojected between all combinations of 2 source views.
+For each pixel, the luma of the pixel is compared with the luma of all pixels in the 3×3 neighborhood of the collocated one.
+If the smallest difference is 0, the luma difference between the reprojected pixel and the center of the collocated block is being included into the set **A**.
+
+The standard deviation which modifies the value of pruning luma threshold, is calculated as a standard deviation of a set **A**, containing luma differences calculated for a subset of pixels. 
+
+[[secPruningMaskAggregation]]
+== Pruning mask aggregation
+
+The pruning masks (per entity) are aggregated frame-by-frame by activating the active samples of the pruning mask in the aggregated pruning mask.
+The mask is reset at the beginning of each intra period.
+The process is completed at the end of the intra period by outputting the last aggregation result.
+<<imgAggregatedMaskEvolution>> illustrates for a pruned view at frame stem:[i], the aggregation of active samples (drawn in white) between the frame stem:[i] and frame stem:[i+k] within an intra period; it can be seen that contours are getting thicker on the changing parts of the geometry component, accounting for the motion within the scene.
+
+.Aggregated mask evolution within an intra period
+[#imgAggregatedMaskEvolution]
+image::4_encoder/aggregated_mask_evolution.svg[align=center]
+
+[[secClusteringActivePixels]]
+== Clustering active pixels
+
+This block is in charge of identifying what is called "clusters".
+A cluster is a connected set of pixels that are active in the aggregated mask (of an entity).
+The connection criteria of a pixel is the presence of at least one other pixel among the eight neighbors. 
+
+.Eight-pixel neighborhood for defining the connectivity criteria for region growing
+[#imgNeighborhood]
+image::4_encoder/eight_pixel_neighborhood.png[align=center]
+
+An example of the clustering is illustrated in <<imgClustersPrunedView>> where each cluster of an already pruned view is represented by a specific false color.
+The cluster are then sorted by a decreasing size order. The parameters associated to each cluster are:
+
+* _x_ and _y_ positions of the top left corner of the bounding box.
+* Width and height of the bounding box.
+
+.Clusters represented in false color on a pruned view
+[#imgClustersPrunedView]
+image::4_encoder/clusters_pruned_view.png[align=center]
+
+[[secClusterMerging]]
+== Cluster merging
+
+Smaller clusters may be completely embedded inside the bounding box of another (larger) cluster within a pruned input view (clusters _a_ and _b_ in <<imgClusterMerging>>).
+The cluster merging includes the smaller clusters inside the bounding box of the larger cluster, and generates a single cluster out of the larger and the several smaller clusters.
+It results in the reduction of the number of patches and the amount of associated parameters.
+As depicted in <<imgClusterMerging>>, by merging the clusters _a_ and _b_ only two patches are generated instead of three.
+
+.An example of cluster merging
+[#imgClusterMerging]
+image::4_encoder/cluster_merging.svg[width=80%,align=center]
+
+[[secClusterSplitting]]
+== Cluster splitting
+
+In order to reduce spatial redundancy of data in the atlas, irregularly-shaped clusters (e.g. large yellow cluster in <<imgClustersPrunedView>>) are split.
+Each cluster is split into two smaller clusters if the total area of bounding boxes of two new resulting clusters is smaller than the area of bounding box of the initial cluster by a threshold.
+In order to decide how to split a cluster, the total area of bounding boxes of two sub clusters is minimized.
+The split is done along a line that is parallel to the shorter side of the cluster’s bounding box.
+This approach allows to divide an L-shaped cluster.
+
+For other cluster shapes (e.g. C-shape), this approach does not split the cluster.
+Therefore, an additional cluster splitting is performed recursively (<<imgClusterSplitting>>).
+Within the entire bounding box of the cluster, the number of blocks (cf. <<secPatchPacking>>) that contain pixels belonging to the cluster is calculated.
+This number is divided by the total number of blocks within the analyzed bounding box.
+If that ratio is less than a threshold, the cluster is split in half.
+Splitting of C-shaped cluster usually results in two L-shaped clusters.
+
+.Recursive splitting of the cluster; dashed lines: C-splitting, dotted lines: L-splitting
+[#imgClusterSplitting]
+image::4_encoder/recursive_splitting.png[width=60%,align=center]
+
+[[secPatchPacking]]
+== Patch packing
+
+The packing process sequentially packs each cluster into the atlases.
+The input parameters are the following:
+
+* "_BlockSize_": the patch size and the patch position are multiple of the block size (number of pixels). Default value is 8.
+* "_MinPatchSize_" is the number of pixels of the smallest border of the patch, below which the patch is discarded. Default value is 8.
+* "_Overlap_" is the number of pixels which will be added to a frontier of a newly split patch; it prevents seam artefacts. Default value is 1.
+* "_PiP_" is a flag enabling the Patch-in-Patch feature when equal to 1. It allows the insertion of patches into other patches. Default value is 1.
+* "_sortingMethod_" is an integer indicating the method to be used to sort the clusters (0: by decreasing area, 1: by ascending view index). Default value is 0.
+* "_enableRecursiveSplit_" is a flag enabling the use of the recursive split. Default value is true.
+
+
+The packing process is based on a version of the MaxRect algorithm <<packing>>.
+It considers the available "Used Space" first, by examining the space which is effectively occupied.
+In a second pass, "Free space" is considered.
+It is made of intricated loops as described by the following pseudo-code:
+
+[source]
+----
+For each cluster:
+  For each atlas:
+    Push the cluster in "Used Space" (0° rotation first, 90° otherwise)
+    If the push failed:
+      Push the cluster into "Free Space" (0° rotation first, 90° otherwise)
+      If the push failed:
+      Split the cluster into 2 parts by its largest border
+      For each resulting 2 parts:
+          If smaller than MinPatchSize:
+            Discard the patch
+          Else:
+            Put the part in the cluster priority list
+----
+
+The output is a patch list for each atlas with all information necessary to recover the patches at the decoder side:
+
+* The patch ID (indexing patches within the patch list),
+* The atlas ID (indexing the atlas that a given patch belongs to), position and size in the atlas,
+* The view ID (indexing the view that a given patch belongs to), position and orientation in the projection plane,
+* The entity ID (indexing the entity that a given patch belongs to) (or 0).
+
+The packing operation from view representation to atlas is done with rotation (first) then vertical flipping (second).
+Only two rotations are tested by the TMIV (among eight configurations supported by the standard, considering combinations of rotations and flipping). 
+
+When per-patch signalling of inpainting data is enabled, patches that originate from the inpainted background view are marked with the 'pdu_inpaint_flag'. 
+The decoder only uses these patches to fill in the missing data. 
+
+Special care is taken to handle basic views.
+They are never split, rotated or flipped because an appropriate number of basic views (<<secNumberOfBasicViews>>) and suitable atlas frame size (<<secFrameSizeCalculation>>) are calculated.
+Also, because basic views often have the same number of active pixels, the ordering of clusters may be arbitrary.
+Clusters with the same number of active pixels are ordered by cluster ID to avoid undefined behavior. 
+
+Note that the optional rotation of 90° is clockwise from atlas frame to projection plane, as illustrated in <<imgPatchRotation>>.
+The sample in the top-left corner of is the reference for specifying the position. 
+
+.Definition of 90° patch rotation
+[#imgPatchRotation]
+image::4_encoder/patch_rotation.svg[align=center]
+
+[[secAvgVal]]
+== Patch average value modification
+
+After packing into atlases, all the attribute patches values are modified, to reduce the number and magnitude of edges between neighboring patches and edges between occupied and unoccupied regions in attribute atlases.
+The average value of each component of the patch is set to a neutral color, e.g.
+512 for 10bps video (<<imgHistogramAverage>>).
+The patch attribute offsets are added in order to restore the original attribute values at the decoder side are sent within atlas data.
+
+.Histogram of an attribute component of a patch: before (left) and after (right) average value modification
+[#imgHistogramAverage]
+image::4_encoder/avg_value_modification.png[width=70%,align=center]
+
+If changing the average value to 512 causes overflows (pixel exceed the range [0, 1023]), the new average value is set according to the the size of the overflow (<<imgHistogramOverflow>>).
+
+.Histogram of an attribute component of a patch: before (left) and after (right) average value modification (overflow avoiding)
+[#imgHistogramOverflow]
+image::4_encoder/avg_value_modification_overflow.png[width=70%,align=center]
+
+== Color correction
+
+TMIV has the ability of aligning different color characteristics of source views.
+If the optional color correction is enabled, color characteristics of each source view are aligned to the color characteristics of a reference view, corresponding to the view captured by the camera which is the closest to the center of the camera rig.
+
+All the pixels from other views are reprojected to the reference view.
+For each pixel, the color difference between pixel’s value and value of corresponding pixel in the reference view is calculated (separately for each attribute component).
+
+Then, the patch attribute offsets (<<secAvgVal>>) sent within atlas data are modified by subtracting the color correction offsets averaged over the entire patch.
+
+[[secVideoGeneration]]
+== Video data generation
+
+The final operation within the single-group encoder is writing the patches in the buffer allocated to the atlas (both the geometry and the attribute components).
+Note that for the entity coding mode, the content of a given patch is extracted from the associated entity view generated by an entity separator based on the patch’s entity ID.
+This assures having the right entity content (attribute and geometry) being written to the patches within the formed atlases.
+
+<<imgPatchToAtlasWriting>> illustrates the generation of an atlas, with the successive write of patch 2, 5 and 8.
+While the packing algorithm is using the information of samples that are mandatory and are non-pruned (represented by area inside the perimeters in dash), the copy of the patch is rectangular, resulting in a heap of possibly overlapping rectangles.
+
+The occupancy of these rectangles is set separately for each frame by analyzing non-aggregated pruning mask.
+For a block size N, the mask is dilated iteratively 2N times using a 3 × 3 structuring element.
+A pixel of a patch is copied to the atlas if there is any non-zero value in a collocated N×N (cf. <<secClusterSplitting>>) block of dilated pruning mask.
+Otherwise, it is filled using neutral attribute and its geometry is set to zero, expressing the invalidity of a sample.
+
+.Successive writing of patches into an atlas
+[#imgPatchToAtlasWriting]
+image::4_encoder/patch_to_atlas_writing.svg[align=center]
+
+[[secGeometryCoding]]
+== Geometry coding
+
+An atlas value is either "invalid/non-occupied" or a geometry value expressed in meters, with maximum geometry value set to 1 km.
+The Draft International Standard <<mivDis>> specifies how to encode occupancy information within geometry atlases, if occupancy is not present explicitly.
+The decoding is based on a normalized disparity range, a geometry threshold and an optional clamping start value.
+These values are signaled per view or even per patch.
+Assuming 10 bits full range geometry atlases, the transformation is described in pseudo-code as:
+
+[source]
+----
+valid := x >= depthOccMapThreshold
+if (valid) {
+  normDisp := max(1/kilometer,
+    normDisp_0 + (normDisp_1023 - normDisp_0) * (max(depthStart, x) / 1023))
+  depth := 1 / normDisp
+}
+----
+
+Line 1 is part of the block to patch map decoder <<mivDis>>, lines 3...5 are part of the Synthesizer (<<secGeometryProcesses>>) and lines 2 and 6 are implicit in the TMIV decoder.
+
+The single-group encoder outputs rectangular patches with full occupancy so the occupancy coding capability of the committee draft is not fully utilized by the TMIV encoder.
+Because of this, the geometry coder implements a simple method that recognizes two situations as depicted in <<imgValidGeometryMapping>> and <<imgInvalidGeometryMapping>>:
+
+* When a source view has only valid geometry values, depthOccMapThreshold is set to zero. This effectively encodes full occupancy (<<imgValidGeometryMapping>>).
+* When a source view has invalid geometry values, depthOccMapThreshold is set to a configured value (stem:[T]) and the normalized disparity range is adjusted such that the value stem:[2T] corresponds to the far geometry (<<imgInvalidGeometryMapping>>).
+
+.When the source material has only valid geometry values, the geometry coder only performs u(16) to u(10) or u(9) scaling and the geometry threshold is set to zero to signal full occupancy; N = 1024 if the geometry has a good quality (<<secGeometryQuality>>) and 512 otherwise
+[#imgValidGeometryMapping]
+image::4_encoder/valid_geometry_mapping.svg[align=center]
+
+.When the source material has invalid geometry values, the geometry coder not only performs u(16) to u(10) or u(9) scaling, but it also sets the geometry threshold to a configurated value (T) and the normalized disparity range is modified such that value 2T corresponds to the far geometry; N = 1024 if the geometry has a good quality (<secGeometryQuality>>) and 512 otherwise
+[#imgInvalidGeometryMapping]
+image::4_encoder/invalid_geometry_mapping.svg[align=center]
+
+When occupancy video of a given atlas is present (i.e. occupancy is not embedded in geometry), the geometry of that atlas is encoded at the full range (i.e. stem:[T = 0]).
+
+For content with poor-quality geometry component (<<secGeometryQuality>>), stem:[N] is set lower to use only part of the dynamic range of the video sub bitstream. It reduces the total bitrate without significant reduction of rendering quality. 
+
+In order to utilize the whole dynamic range from 0 (or stem:[2T]) to stem:[N-1], stem:[d_{\textrm{near}}^{-1}] and stem:[d_{\textrm{far}}^{-1}] values are recalculated once per GOP (for each view independently), as:
+
+[stem]
+++++
+d_{\textrm{near}}^{-1} = \max_{\textrm{all pixels} \in \textrm{GOP}} d^{-1}\left(\textrm{pixel}\right)
+++++
+
+[stem]
+++++
+d_{\textrm{far}}^{-1} = \min_{\textrm{all pixels} \in \textrm{GOP}} d^{-1}\left(\textrm{pixel}\right)
+++++
+
+== Geometry downscaling
+
+When enabled in the configuration, the geometry atlases are scaled-down by a factor of 2×2.
+The downscaling yields a lower overall pixel-rate and a higher geometry encoding quality for a given bitrate.
+For downscaling the geometry, a ‘max pooling 2x2’ filter is used.
+The assumption is made that foreground objects are encoded as high (bright) levels.
+The max pooling filter does not produce ‘in-between’ geometry levels and the downscaled output has a known bias as foreground objects are slightly dilated.
+Such bias can be reverted on the decoder side.
+
+== Occupancy downscaling
+
+If the TMIV encoder is configured to output occupancy video data (instead of embedding the occupancy information in the geometry video data), then the full-resolution occupancy maps are downscaled by a configurable scaling factor.
+The default factor is the inherent resolution of the occupancy maps (stem:[N] in <<secVideoGeneration>>).
+For entity-based coding a higher resolution is recommended.
+The decoder reconstructs the full-resolution occupancy maps by performing upscaling using nearest neighbor interpolation.
+Note that for complete atlases (e.g. atlases that include basic views only), occupancy maps may not be output since all pixels are occupied.
+
+== Video encoding
+
+MIV is agnostic to the video codec and the test model is designed to work with external video coding tools.
+However, the default codec for all video sub bitstreams is HEVC with Main 10 profile and random-access configuration, and the TMIV decoder is capable of decoding HEVC sub bitstreams by inclusion of the HEVC Test Model (HM).
+VVC can also be used as an external video coding tool, using the Versatile Video Encoder (https://github.com/fraunhoferhhi/vvenc[VVCenC]).
+
+== Packing of video sub-bitstream components
+
+A subpicture merging softwarefootnote:[“AHG3/AHG12: Subpicture merging software”, ISO/IEC JTC1/SC29/WG11 input document m54168, June 2020, online meeting.] allows for encoding several VVC bitstreams separately, and merge selected encoded bitstreams into a single VVC compliant bitstream with multiple sub-pictures.
+<<imgVideoSubBitstream>> presents the packing with two VVC bitstreams, one for the texture attribute video data, and one for the geometry video data.
+An example of a packed video data for a given atlas featuring a texture video data at full resolution and a downscaled geometry video data for ClassroomVideo content is shown in <<imgClassroomPackedAtlasVideoSequence>>.
+By encoding sub-picture separately, it can be ensured that the rate-distortion optimization is correct for each packed component and that the bitrate of the merged bitstream will be approximately the same as the sum of the separate sub-picture bitstreams. 
+
+.Encoding of texture and geometry components into one packed video sub-bitstream
+[#imgVideoSubBitstream]
+image::4_encoder/video_sub_bitstream_creation.svg[align=center]
+
+.An example one frame of classroom video sequence with packed atlases
+[#imgClassroomPackedAtlasVideoSequence]
+image::4_encoder/classroom_packed.jpg[align=center]
+
+== Multi-plane image encoder
+
+=== Multi-plane image
+A multi-plane image (MPI) is a layered representation of a 3D scene.
+The scenefootnote:[To transform an input MVD scene representation into an MPI representation, the 3D scene is first created by unprojecting each view from the MVD to the 3D scene (note that this is out of scope of the test model and TMIV implementation).] is decomposed into a set of planar or spherical layers (see <<imgMpiSlices>>) sampled at different depths from a given reference point of view.
+Each layer is a color + transparency frame obtained by projecting the part of the 3D scene contained around the layer location on the same reference camera.
+This reference camera is positioned at the given reference point of view.
+The reference camera is a perspective camera when using planar layers.
+The reference camera is a spherical (typically equirectangular) camera when using spherical layers.
+
+In the following, we consider the reference camera with resolution W x H and S layers.
+
+In the case of MPI, there is no view synthesized inside TMIV encoder.
+There is only one MPI camera at the input of TMIV encoder.
+The TMIV encoder processes it.
+Generated metadata carries the parameters for that camera.
+
+Transmitting MPI over MIV requires the activation of the transparency and the use of depth constant patches.
+The layer index, that a patch is issued from, is written in atlasPatch3dOffsetD of this patch, and is used at decoder side for synthesis.
+
+The input source view for the TMIV MPI encoder has the reference camera parameters (projection, resolution, ...) and also the number of layers.
+
+.Texture MPI layers of different projections; perspective Kitchen (left) and equirectangular Museum (right)
+[#imgMpiSlices]
+image::4_encoder/mpi_slices.jpg[align=center]
+
+=== Input MPI format
+An MPI content in raw storage cannot be directly input to the TMIV encoder.
+
+An MPI content in packed compressed storage (PCS) can be input to the TMIV encoder.
+
+[[secMpiRawStorage]]
+==== Raw storage
+Raw storage of an MPI (cf. <<secMpiRawStorage>>) is not effective in terms of memory usage because a lot of samples are empty.
+Moreover it induces many small disks accesses which may reduce the I/O efficiency.
+An example of MPI content is shown in <<imgMpiFan40to45>>.
+
+.Example of MPI layers from Mpi_Fan, from layer 40 (a) to layer 45 (f). Texture is on the first row and transparency is on the second row.
+[#imgMpiFan40to45]
+image::4_encoder/mpi_fan_40-45.jpg[align=center]
+
+Raw storage is defined as below:
+
+* texture layers must be provided as a single file (YC~B~C~R~ 4:2:0 10 bits from TMIV8.0-rc1),
+* transparency layers must be provided as a single file (YC~B~C~R~ 4:2:0 8 bits from TMIV8.0-rc1).
+
+Each file (texture or transparency) is a temporal concatenation of the stacked layers sorted from the furthest to the closest one with respect to the reference camera.
+The layer index is the quantized normalized disparity coded on stem:[ceil(log2(S))] bits.
+Raw storage is illustrated in <<imgMpiStorage>>.
+
+From TMIV8.0-rc1 implementation, transparency is coded on 16 levels only, hence 4 bits would be enough.
+But a YC~B~C~R~ 4:2:0 8 bits format is used to ease file manipulation.
+
+.MPI raw storage diagram. In this simplified example, the MPI content is made of 4 layers (sorted from far to close) and 3 concatenated temporal frames.
+[#imgMpiStorage]
+image::4_encoder/mpi_storage.jpg[align=center]
+
+[[secMpiPackedCompressedStorage]]
+==== Packed compressed storage (PCS)
+To mitigate raw storage issues, a compressed version of the MPI is defined.
+This compressed version is the one needed at input of TMIV encoder.
+
+For a given temporal frame, the number of active layers of a given pixel (i,j) is given by N~i,j~ (N~i,j~ in [0, S]). 
+We can then define for each temporal frame of the MPI :
+
+* N~i,j~   : the number of active layers associated to pixel (i,j), as a YUV400P16LE sample (2 bytes)
+* C~i,j,k~ : the color of pixel (i,j) for the k-th active layer, as a YUV444P10LE sample (6 bytes)
+* D~i,j,k~ : the layer index of pixel (i,j) for the k-th active layer, as a YUV400P16LE sample (2 bytes)
+* T~i,j,k~ : the transparency of pixel (i,j) for the k-th active layer, as a YUV400P8 sample (1 byte)
+
+where k is an integer in the range [1, N~i,j~].
+The layer index D~i,j,k~ is the quantized normalized disparity coded on stem:[ceil(log2(S))] bits.
+
+The W x H number of active layers per pixel are first provided as a regular YUV400P16LE frame in the bitstream, and the concatenated list of all samples is immediately stacked after as presented in <<imgMpiPcsLayout>>.
+
+.MPI packed compressed storage (PCS) layout.
+[#imgMpiPcsLayout]
+image::4_encoder/mpi_pcs_layout.jpg[align=center]
+
+When reading an MPI temporal frame, one first read the W x H YUV400P16LE frame containing the number of active layers per pixel.
+The total number of active layers is easily derived (sum over all pixels).
+It then makes possible to read the whole sample list at once for current temporal frame.
+This results in only 2 disk “accesses” to read a temporal frame.
+
+Once in memory, this packed structure can be kept as it and accessed by the means of a dedicated table / index derived from the number of active layers per pixel.
+
+==== Raw storage to PCS
+TMIV encoder can only handle MPI content in PCS compressed version.
+An MPI content in raw storage should be first converted into the compressed version to be processed by the TMIV encoder.
+A specific executable is available from TMIV8.0-rc1 for this conversion.
+Please refer to <<secMpiRawStorage>> for the expected format of an MPI content in raw storage.
+
+=== MPI encoding process
+An MPI is a non-redundant representation of the 3D scene.
+Therefore, there is no need for a pruning process inside the TMIV Encoder.
+The processing steps for encoding an MPI content with the TMIV MPI encoder (cf. <<imgMpiEncoder>>) are presented below.
+
+First step of the TMIV MPI encoder is the mask creation.
+
+For each layer, the transparency is read and a transparency map is created.
+Then a thresholding operation is performed to detect occupied pixels (threshold is set to 0 in the current implementation) which leads to a binary mask per layer.
+This operation is repeated for each frame of an intra-period, and an aggregated binary mask per layer is generated at the end of the intra-period.
+Hence this aggregation process is done as in <<secPruningMaskAggregation>> per layer instead of per view. In the end, there is one binary mask per layer for the intra-period.
+
+These aggregated masks are then sent to the clustering process, which delivers clusters to the packing process for each layer.
+This clustering step is the same as the one described in <<imgSingleGroupEncoder>>, cf. <<secClusteringActivePixels>>, <<secClusterMerging>> and <<secClusterSplitting>>.
+
+The obtained clusters are then packed using the process described in <<imgSingleGroupEncoder>>, cf. <<secPatchPacking>>, but the sorting operation is changed to get clusters from distant layers packed first rather than the biggest clusters (sortingMethod is set to 1 in <<secPatchPacking>>).
+This sorting allows an efficient rendering process at decoder side, known as reverse painter's algorithm.
+
+Finally, two attribute atlases are generated, one for the texture and one for the transparency similarly to what is done for texture and geometry in a regular process.
+
+.Top-level diagram of the TMIV MPI encoder
+[#imgMpiEncoder]
+image::4_encoder/mpi_encoder.svg[align=center]
+
+== Bitstream formation and multiplexing
+
+The output of the TMIV encoder is a V3C sample stream with MIV extensions (<<imgV3cMivSampleStream>>).
+The V3C sample stream consists of a V3C parameter set, common atlas data, atlas data, optional geometry video data, optional attribute video data, optional occupancy video data, and optional packed video data.
+The atlas data is a NAL sample stream which includes also the SEI messages.
+The common atlas data sub bitstream contains the view parameters list while the regular atlas data sub bitstreams contain the patch data.
+The patch data is sent only for intra frames and a frame order count NAL unit is used to skip all inter frames at once.
+
+A restriction of MIV on V3C is that V3C units have to be grouped in chunks of frames, with all V3C units in a chunk corresponding to the same frame range.
+This restriction has the purpose of improving buffering.
+The current version of TMIV addresses the restriction in a trivial way by having only one V3C sequence with one V3C unit per type and atlas.
+This choice makes it possible to use the HEVC test model (HM) encoder or https://github.com/fraunhoferhhi/vvenc:[VVenC] as an external tool to encode entire video sub bitstreams at once.
+The formatting and multiplexing is thus performed as follows:
+
+. Atlases of multiple groups are concatenated with renumbering of atlas ID’s. Also, parameter set and atlas data of all groups are merged together into one parameter set and one atlas data units, respectively.
+. An intermediate bitstream is formatted that includes no video sub bitstreams.
+. All geometry (if present), attribute (if present), occupancy (if present), and packed (if present) video data are output as raw video files.
+. The raw video is encoded using the HEVC test model (HM) or the verstaile videl codec (https://github.com/fraunhoferhhi/vvenc[VVenC]) resulting in separate video sub bitstreams.
+. The intermediate bitstream plus all sub bitstreams are concatenated with insertion of suitable headers, to form the output bitstream.
+ 
+.V3C sample stream with MIV extensions
+[#imgV3cMivSampleStream]
+image::4_encoder/v3c_miv_sample_stream.png[align=center]

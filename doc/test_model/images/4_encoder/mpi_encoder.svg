@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1014"
+   height="620.99988"
+   overflow="hidden"
+   version="1.1"
+   id="svg4836"
+   sodipodi:docname="mpi_encoder.svg"
+   style="overflow:hidden"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <metadata
+     id="metadata4840">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1705"
+     inkscape:window-height="1402"
+     id="namedview4838"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="0.30390625"
+     inkscape:cx="-461.20823"
+     inkscape:cy="314.00002"
+     inkscape:window-x="3413"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g4834" />
+  <defs
+     id="defs4638">
+    <clipPath
+       id="clip0">
+      <path
+         d="M 0,0 H 1280 V 720 H 0 Z"
+         id="path4635"
+         inkscape:connector-curvature="0"
+         style="clip-rule:evenodd;fill-rule:evenodd" />
+    </clipPath>
+  </defs>
+  <g
+     clip-path="url(#clip0)"
+     id="g4834"
+     transform="translate(-170,-53.000099)">
+    <rect
+       x="173.5"
+       y="53.500099"
+       width="206"
+       height="307"
+       stroke-miterlimit="10"
+       id="rect4642"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(213.429,81)"
+       id="text4644"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Source MPI</text>
+    <rect
+       x="946.5"
+       y="72.500099"
+       width="237"
+       height="39"
+       stroke-miterlimit="10"
+       id="rect4646"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(955.355,100)"
+       id="text4652"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">View<tspan
+   x="58.233299"
+   y="0"
+   id="tspan4648">parameters</tspan>
+<tspan
+   x="186.233"
+   y="0"
+   id="tspan4650">list</tspan>
+</text>
+    <rect
+       x="993.5"
+       y="140.5"
+       width="172"
+       height="39"
+       stroke-miterlimit="10"
+       id="rect4654"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(1002.83,168)"
+       id="text4658"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Parameter<tspan
+   x="118.667"
+   y="0"
+   id="tspan4656">set</tspan>
+</text>
+    <rect
+       x="984.5"
+       y="133.5"
+       width="172"
+       height="39"
+       stroke-miterlimit="10"
+       id="rect4660"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(993.757,161)"
+       id="text4664"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Parameter<tspan
+   x="118.667"
+   y="0"
+   id="tspan4662">set</tspan>
+</text>
+    <rect
+       x="175.5"
+       y="97.500099"
+       width="201"
+       height="58"
+       stroke-miterlimit="10"
+       id="rect4666"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(185.427,125)"
+       id="text4670"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">View parameters<tspan
+   font-size="16"
+   x="27.446699"
+   y="21"
+   id="tspan4668"
+   style="font-size:16px">(additional labels)</tspan>
+</text>
+    <rect
+       x="179.5"
+       y="172.5"
+       width="195"
+       height="68"
+       stroke-miterlimit="10"
+       id="rect4672"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(190.033,199)"
+       id="text4676"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Texture Attribute<tspan
+   x="27.34"
+   y="29"
+   id="tspan4674">component</tspan>
+</text>
+    <rect
+       x="183.5"
+       y="247.5"
+       width="185"
+       height="97"
+       stroke-miterlimit="10"
+       id="rect4678"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(199.661,275)"
+       id="text4684"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Transparency<tspan
+   x="28.219999"
+   y="29"
+   id="tspan4680">Attribute</tspan>
+<tspan
+   x="16.8867"
+   y="58"
+   id="tspan4682">component</tspan>
+</text>
+    <path
+       d="m 379.5,92.0001 559.906,1e-4 v 1 L 379.5,93.0001 Z m 558.573,-3.4999 8,4 -8,4 z"
+       id="path4686"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 540.5,341.5 c 0,-7.18 5.82,-13 13,-13 h 54 c 7.18,0 13,5.82 13,13 v 52 c 0,7.18 -5.82,13 -13,13 h -54 c -7.18,0 -13,-5.82 -13,-13 z"
+       stroke-miterlimit="8"
+       id="path4688"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(554.789,354)"
+       id="text4694"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">Cluster<tspan
+   x="3.5"
+   y="19"
+   id="tspan4690">Active</tspan>
+<tspan
+   x="4.9200401"
+   y="38"
+   id="tspan4692">pixels</tspan>
+</text>
+    <path
+       d="m 652.5,341.5 c 0,-7.18 5.82,-13 13,-13 h 66 c 7.18,0 13,5.82 13,13 v 52 c 0,7.18 -5.82,13 -13,13 h -66 c -7.18,0 -13,-5.82 -13,-13 z"
+       stroke-miterlimit="8"
+       id="path4696"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(680.003,363)"
+       id="text4700"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">Split<tspan
+   x="-13.92"
+   y="23"
+   id="tspan4698">clusters</tspan>
+</text>
+    <path
+       d="m 786.5,341.5 c 0,-7.18 5.82,-13 13,-13 h 65 c 7.18,0 13,5.82 13,13 v 52 c 0,7.18 -5.82,13 -13,13 h -65 c -7.18,0 -13,-5.82 -13,-13 z"
+       stroke-miterlimit="8"
+       id="path4702"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(810.725,364)"
+       id="text4706"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">Pack<tspan
+   font-size="16"
+   x="-7.1666899"
+   y="20"
+   id="tspan4704"
+   style="font-size:16px">patches</tspan>
+</text>
+    <path
+       d="m 647.5,238.667 c 0,-7.272 5.895,-13.167 13.167,-13.167 h 75.666 c 7.272,0 13.167,5.895 13.167,13.167 v 52.666 c 0,7.272 -5.895,13.167 -13.167,13.167 h -75.666 c -7.272,0 -13.167,-5.895 -13.167,-13.167 z"
+       stroke-miterlimit="8"
+       id="path4708"
+       inkscape:connector-curvature="0"
+       style="fill:#c5e0b4;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(670.25,249)"
+       id="text4716"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">Create<tspan
+   x="5.6666899"
+   y="23"
+   id="tspan4710">mask</tspan>
+<tspan
+   x="-9.8333101"
+   y="45"
+   id="tspan4712">from</tspan>
+<tspan
+   x="32.5"
+   y="45"
+   id="tspan4714">MPI</tspan>
+</text>
+    <path
+       d="m 776.5,238.667 c 0,-7.272 5.895,-13.167 13.167,-13.167 h 84.666 c 7.272,0 13.167,5.895 13.167,13.167 v 52.666 c 0,7.272 -5.895,13.167 -13.167,13.167 h -84.666 c -7.272,0 -13.167,-5.895 -13.167,-13.167 z"
+       stroke-miterlimit="8"
+       id="path4718"
+       inkscape:connector-curvature="0"
+       style="fill:#c5e0b4;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(794.725,261)"
+       id="text4722"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">Aggregate<tspan
+   x="-2.8333099"
+   y="19"
+   id="tspan4720">MPI</tspan>
+masks</text>
+    <path
+       d="m 170.5,517.667 c 0,-4.511 3.656,-8.167 8.167,-8.167 h 34.666 c 4.511,0 8.167,3.656 8.167,8.167 v 32.666 c 0,4.511 -3.656,8.167 -8.167,8.167 h -34.666 c -4.511,0 -8.167,-3.656 -8.167,-8.167 z"
+       stroke-miterlimit="8"
+       id="path4724"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <path
+       d="m 170.5,452.667 c 0,-4.511 3.656,-8.167 8.167,-8.167 h 34.666 c 4.511,0 8.167,3.656 8.167,8.167 v 32.666 c 0,4.511 -3.656,8.167 -8.167,8.167 h -34.666 c -4.511,0 -8.167,-3.656 -8.167,-8.167 z"
+       stroke-miterlimit="8"
+       id="path4726"
+       inkscape:connector-curvature="0"
+       style="fill:#c5e0b4;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <path
+       d="m 744.5,367 h 34.725 v 1 H 744.5 Z m 33.391,-3.5 8,4 -8,4 z"
+       id="path4728"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 620.5,367 h 25.333 v 1 H 620.5 Z m 24,-3.5 8,4 -8,4 z"
+       id="path4730"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 832.437,304.5 v 12.585 H 580.5 l 0.5,-0.5 v 5.419 h -1 v -5.919 h 251.937 l -0.5,0.5 V 304.5 Z m -247.937,16.17 -4,8 -4,-8 z"
+       id="path4732"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 749.5,264 h 19.777 v 1 H 749.5 Z m 18.444,-3.5 8,4 -8,4 z"
+       id="path4734"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 0,-0.5 h 54.8208 v 54.6905 l -0.5,-0.5 H 598.308 v 1 H 53.8208 V 0 l 0.5,0.5 H 0 Z m 596.975,50.6905 8,4 -8,4 z"
+       transform="matrix(1,0,0,-1,379.5,206.691)"
+       id="path4736"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 435.5,207 h -1.301 l 0.5,-0.5 v 57.842 l -0.5,-0.5 h 206.5 v 1 h -207 V 206 h 1.801 z m 203.866,53.342 8,4 -8,4 z"
+       id="path4738"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 634.5,492.5 c 0,-6.075 4.925,-11 11,-11 h 91 c 6.075,0 11,4.925 11,11 v 44 c 0,6.075 -4.925,11 -11,11 h -91 c -6.075,0 -11,-4.925 -11,-11 z"
+       stroke-miterlimit="8"
+       id="path4740"
+       inkscape:connector-curvature="0"
+       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(651.713,498)"
+       id="text4746"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">Generate<tspan
+   x="16.5"
+   y="23"
+   id="tspan4742">video</tspan>
+<tspan
+   x="20.6667"
+   y="45"
+   id="tspan4744">data</tspan>
+</text>
+    <path
+       d="m 832.012,406.5 v 37.77 H 690.5 l 0.5,-0.5 v 30.603 h -1 V 443.27 h 141.512 l -0.5,0.5 V 406.5 Z m -137.512,66.539 -4,8 -4,-8 z"
+       id="path4748"
+       inkscape:connector-curvature="0" />
+    <rect
+       x="1032.5"
+       y="356.5"
+       width="127"
+       height="39"
+       stroke-miterlimit="10"
+       id="rect4750"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(1041.76,384)"
+       id="text4752"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Atlas data</text>
+    <rect
+       x="1023.5"
+       y="348.5"
+       width="127"
+       height="39"
+       stroke-miterlimit="10"
+       id="rect4754"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(1032.68,376)"
+       id="text4756"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Atlas data</text>
+    <path
+       d="m 877.501,367 138.979,0.146 v 1 L 877.5,368 Z m 137.649,-3.356 8,4.009 -8,3.991 z"
+       id="path4758"
+       inkscape:connector-curvature="0" />
+    <rect
+       x="913.5"
+       y="491.5"
+       width="243"
+       height="68"
+       stroke-miterlimit="10"
+       id="rect4760"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(948.375,519)"
+       id="text4768"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Texture <tspan
+   x="85.339996"
+   y="0"
+   id="tspan4762">attribute</tspan>
+<tspan
+   x="30.6667"
+   y="29"
+   id="tspan4764">video</tspan>
+<tspan
+   x="94.666603"
+   y="29"
+   id="tspan4766">data</tspan>
+</text>
+    <rect
+       x="898.5"
+       y="480.5"
+       width="249"
+       height="68"
+       stroke-miterlimit="10"
+       id="rect4770"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(936.214,508)"
+       id="text4784"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Texture <tspan
+   x="85.339996"
+   y="0"
+   id="tspan4772">attribute</tspan>
+<tspan
+   x="6.1666298"
+   y="29"
+   id="tspan4774">video</tspan>
+<tspan
+   x="70.166603"
+   y="29"
+   id="tspan4776">data</tspan>
+<tspan
+   font-size="19"
+   x="123.5"
+   y="29"
+   id="tspan4778"
+   style="font-size:19px">(</tspan>
+<tspan
+   font-size="19"
+   x="129.66701"
+   y="29"
+   id="tspan4780"
+   style="font-size:19px">raw</tspan>
+<tspan
+   font-size="19"
+   x="159.66701"
+   y="29"
+   id="tspan4782"
+   style="font-size:19px">)</tspan>
+</text>
+    <rect
+       x="896.5"
+       y="605.5"
+       width="268"
+       height="68"
+       stroke-miterlimit="10"
+       id="rect4786"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(907.011,632)"
+       id="text4794"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Transparency<tspan
+   x="152.44"
+   y="0"
+   id="tspan4788">attribute</tspan>
+<tspan
+   x="67.553299"
+   y="29"
+   id="tspan4790">video</tspan>
+<tspan
+   x="131.55299"
+   y="29"
+   id="tspan4792">data</tspan>
+</text>
+    <rect
+       x="888.5"
+       y="595.5"
+       width="267"
+       height="67"
+       stroke-miterlimit="10"
+       id="rect4796"
+       style="fill:#ffffff;stroke:#000000;stroke-linejoin:round;stroke-miterlimit:10" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(898.683,622)"
+       id="text4810"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Transparency<tspan
+   x="152.44"
+   y="0"
+   id="tspan4798">attribute</tspan>
+<tspan
+   x="43.053299"
+   y="29"
+   id="tspan4800">video</tspan>
+<tspan
+   x="107.053"
+   y="29"
+   id="tspan4802">data</tspan>
+<tspan
+   font-size="19"
+   x="160.38699"
+   y="29"
+   id="tspan4804"
+   style="font-size:19px">(</tspan>
+<tspan
+   font-size="19"
+   x="166.55299"
+   y="29"
+   id="tspan4806"
+   style="font-size:19px">raw</tspan>
+<tspan
+   font-size="19"
+   x="196.55299"
+   y="29"
+   id="tspan4808"
+   style="font-size:19px">)</tspan>
+</text>
+    <path
+       d="m 170.5,582.667 c 0,-4.511 3.656,-8.167 8.167,-8.167 h 34.666 c 4.511,0 8.167,3.656 8.167,8.167 v 32.666 c 0,4.511 -3.656,8.167 -8.167,8.167 h -34.666 c -4.511,0 -8.167,-3.656 -8.167,-8.167 z"
+       stroke-miterlimit="8"
+       id="path4812"
+       inkscape:connector-curvature="0"
+       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#41719c;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(241.637,610)"
+       id="text4824"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">Video<tspan
+   x="44.880001"
+   y="0"
+   id="tspan4814">processes</tspan>
+<tspan
+   x="-1.9704"
+   y="-67"
+   id="tspan4816">Atlas</tspan>
+<tspan
+   x="38.029598"
+   y="-67"
+   id="tspan4818">processes</tspan>
+<tspan
+   x="-1.9704"
+   y="-129"
+   id="tspan4820">Mask</tspan>
+<tspan
+   x="40.696301"
+   y="-129"
+   id="tspan4822">processes</tspan>
+</text>
+    <path
+       d="m 0,-0.5 h 81.7939 v 191.159 h -1 V 0 l 0.5,0.5 H 0 Z m 85.2939,189.826 -4,8 -4,-8 z"
+       transform="matrix(-4.37114e-8,1,1,4.37114e-8,690.5,547.5)"
+       id="path4826"
+       inkscape:connector-curvature="0" />
+    <path
+       d="M 6.15547e-4,-0.5 144.364,-0.322275 144.362,0.677724 -6.15547e-4,0.5 Z M 143.035,-3.82391 151.03,0.185932 143.025,4.17608 Z"
+       transform="matrix(1,0,0,-1,747.5,514.686)"
+       id="path4828"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>

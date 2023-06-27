@@ -1,0 +1,339 @@
+include::common_attributes.adoc[]
+
+= Description of the rendering process
+
+The TMIV decoder follows the MIV decoding process described in the committee draft <<mivDis>> including the demultiplexing & decoding order, bitstream parsing, video decoding, frame unpacking, block to patch map decoding, and resulting conformance points.
+This section describes the non-normative renderer (<<imgRenderer>>) starting from the conformance points.
+This includes the following stages:
+
+* Block to patch map filtering including entity filtering and patch culling to speed up the rendering,
+* Reconstruction processes including occupancy reconstruction, attribute average value restoration, and pruned view reconstruction,
+* Geometry processes including geometry scaling, depth value processing, and depth estimation, 
+* View synthesis including unprojection, reprojection, and merging,
+* Viewport filtering including inpainting and viewing space handling. 
+
+The output of the TMIV renderer (which can be run explicitly or as part of the TMIV decoder) is a _perspective viewport_ or an _omnidirectional view_ according to a desired viewing pose, enabling motion parallax cues within a limited space.
+The rendered output is provided in luma and chroma 4:2:0 format with 10 bits for attribute component and 16 bits for geometry component.
+It can in principle be displayed on either head mounted display (HMD) or on regular 2D monitor with tracking system feeding the updated _viewing position_ and _orientation_ back to the renderer for the next target view.
+More details on the coordinate systems, projections, and camera extrinsics can be found in <<annexB>>.
+
+.Process flow for the TMIV renderer
+[#imgRenderer]
+image::5_renderer/renderer.svg[align=center]
+
+In addition to the regular TMIV rendering, support for MPI rendering is added to the software and described further in <<secMpiRenderer>>.
+
+== Block to patch map filtering
+
+=== Entity filtering
+
+The entity filtering is an optional stage that is invoked to select a subset of entities for rendering, by filtering out blocks in the block to patch map that correspond to other entities.
+A possible usecase is an application that chooses to render foreground objects only, and thus all patches that belong to background objects are excluded.
+The block to patch map per atlas is filtered as specified in Annex H of the MIV specification.
+
+=== Patch culling
+
+The patch culler filters out blocks from the block to patch map to cull patches which have no overlap with the target view based on the viewing position and the orientation.
+The purpose is to reduce the computational cost of the view synthesis.
+The culling operation follows the same order as the patch creation to be able to filter the block to patch map patch-by-patch.
+
+For each patch, the four corners of the patch are reprojected to the target view by using both minimum and maximum geometry values of view which the patch belongs to.
+When the area enclosed by the eight reprojected points (stem:[P_i (x,y), i = 0, 1, ..., 7]) has no overlap with the target viewport, the patch is culled.
+The patch map is updated as illustrated in <<imgOccupancyMapUpdate>>.
+If the patch is culled, the corresponding atlas’s samples are labeled as unused and ignored during the rendering process.
+
+.Occupancy map update in an ordered manner with patch culling
+[#imgOccupancyMapUpdate]
+image::5_renderer/occupancy_map_update.png[align=center]
+
+== Reconstruction processes
+=== Occupancy reconstruction
+
+This process reconstructs an occupancy frame at nominal atlas resolution whether it is embedded in the geometry frame, signaled explicitly, or no occupancy information case (i.e. atlas is fully occupied). 
+
+* When occupancy is embedded in the geometry frame, the occupancy frame is extracted from the geometry one (after the geometry upscaling process) by comparing its pixel values against the depthOccMapThreshold defined in <<secGeometryCoding>>.
+When smaller than the threshold, the occupancy value at the given pixel is set to 0 otherwise it is set to 1.
+* When occupancy video sub bitstream is present (i.e. signaled explicitly), nearest neighbor interpolation is performed to reconstruct the occupancy map at nominal atlas resolution.
+* In the case of no occupancy being signaled (i.e. atlas is fully occupied), the occupancy frame at nominal atlas resolution is filled with ones.  
+
+More details on the occupancy reconstruction process is available in Annex H of the MIV specification.
+
+=== Attribute mean value restoration
+Please refer to Annex H of the MIV specification for more details.
+
+[[secPrunedViewReconstruction]]
+=== Pruned view reconstruction
+
+The reconstruction of the pruned views is an operation opposite to video data generation performed in the encoder (<<secVideoGeneration>>).
+All the (non-culled) patches from atlases (both geometry and attributes) are copied to images which correspond to each source view.
+Pruned view reconstruction is presented in <<imgPrunedViewReconstruction>>: patches 2, 3, 5, 7 and 8 are copied to proper position in proper views, based on their position in the view they belong to.
+Except for basic views, significant part of most reconstructed views is empty.
+
+.Pruned view reconstruction
+[#imgPrunedViewReconstruction]
+image::5_renderer/pruned_view_reconstruction.png[align=center]
+
+[[secGeometryProcesses]]
+== Geometry processes
+
+=== Geometry upscaling
+
+Please refer to Annex H of the MIV specification for more details.
+
+=== Depth value decoding
+
+Please refer to Annex H of the MIV specification for more details.
+
+=== Depth estimation
+
+When TMIV encoder operates in the geometry absent profile, no geometry video sub bitstreams are present.
+Thus, a depth estimation process may be invoked at the decoder side inputting the reconstructed pruned views and the associated view parameters to compute and output the depth maps (i.e. the geometry frames).
+The renderer then uses them along with the texture pruned views to render the targeted viewports. 
+
+Currently, TMIV software does not have an integrated depth estimation tool but it is possible run the TMIV decoder to output the view parameters and the texture pruned views, use a standalone MPEG depth estimation software such as IVDE <<ivdeDoc>> and DERS <<dersDoc>> to estimate the depth maps externally, and then feed them into the TMIV renderer to proceed with the rest of the rendering operations.
+
+== View synthesis (unprojection, reprojection, and merging)
+
+The TMIV proposes two alternatives for the synthesis.
+The first one is RVS-based <<rvsDoc>>, described in <<secRvsSynthesizer>>, the second one is the View Weighting Synthesizer (VWS), described in <<secViewWeightingSynthesizer>>.
+
+[[secRvsSynthesizer]]
+=== RVS-based synthesizer
+
+==== Overview
+
+. Generic reprojection of image points,
+.. Unprojection image to scene coordinates (using intrinsics source camera parameters),
+.. Changing the frame of reference from the source to the target camera by a combined rotation and translation (using extrinsics camera parameters),
+.. Projecting the scene coordinates to image coordinates (using target intrinsics camera parameters).
+. Rasterizing triangles,
+.. Discarding inverted triangles,
+.. Creating a clipped bounding box,
+.. Barycentric interpolation of attribute and geometry values,
+. Blending views/pixels.
+
+While RVS was designed to render full views, the Synthesizer works with arbitrary vertex descriptor lists, vertex attribute lists, and triangle descriptor lists (which is very much like OpenGL).
+The view blending is per pixel and independent of the rendering order.
+It is thus possible to render any triangle from any patch in any order.
+
+The RVS-based synthesizer may synthesize directly from atlases, thus for this synthesizer there is no necessity of pruned view reconstruction (<<secPrunedViewReconstruction>>).
+
+The RVS-based synthesizer has currently no support for handling encoder-side inpainted data. 
+
+==== Rendering from atlases
+
+As part of the decoder (primary purpose) the renderer takes as input:
+
+* Multiple 10 bits attribute atlases and 10 bits geometry atlases (normalized disparities),
+* Block to patch map per atlas,
+* Parameters including an atlas parameters list and a camera parameters list,
+* Target camera parameters for a _perspective viewport_ or an _omnidirectional view_.
+
+The output of the renderer is a single view (viewport or omnidirectional) with 10 bits attribute and 10 bits geometry components. 
+
+.Creating a mesh from an atlas. Triangles between pixels from Patch 5 and 2 are omitted. Note that Patch 8 is not drawn because no triangle can be formed. Unused pixels are skipped too
+[#imgMeshFromAtlas]
+image::5_renderer/mesh_from_atlas.svg[align=center]
+
+The process is to build a mesh (<<imgMeshFromAtlas>>) from each of the atlases:
+
+* The **vertex descriptor list** is formed pixel-by-pixel:
+** Skip or write dummy values for unoccupied pixels,
+** Looking up the atlas parameters list using the Patch ID in the block to patch map,
+** Looking up the view parameters list using the View ID in atlas parameters list,
+** Calculating the position of the vertex in the view.
+** Reprojecting from the source view to the target view.
+* The **vertex attribute list** is simply the texture values converted to YC~B~C~R~ 4:4:4.
+* The **triangle descriptor list** is formed by:
+** For each pixel consider two triangles [ / ]
+** Add the triangle when all vertices have the same Patch ID.
+
+This mesh is then rasterized using barycentric interpolation of attribute and geometry.
+Multiple atlases will be utilized to render from directly in order to have an efficient pipeline for mesh generation and rasterization operations.
+
+==== Pixel blending
+
+The blended value of a pixel component is the weighted sum over all pixel contributions.
+This choice enables pixel blending in arbitrary order.
+The weight of a contributing pixel is determined by multiplying three exponential functions with configurable parameters (<<tabBlending>>). 
+
+[stem]
+++++
+I_{\textrm{blend}} = \sum_i w \left( \gamma_i, d_i, s_i \right) I_i
+++++
+
+[stem]
+++++
+w : \left( \gamma_i, d_i, s_i \right) \rightarrow e^{-c_\gamma + c_d d - c_s s}
+++++
+
+The weighted sums are normalized by the geometry weight to reduce the required internal precision.
+All three inputs (ray angle, depth and stretching) are computed in the reprojection process. 
+
+.Description of the blending process
+[#tabBlending]
+|===
+|Input |Description |Purpose
+
+a|RayAngle stem:[\gamma]
+|The angle [rad] between the ray from the input camera and the ray from the target camera.
+|Prefer nearby views over views further away (soft view selection).
+
+a|Reciprocal geometry stem:[d]
+|The reciprocal of the geometry value in the target view [diopter].
+|Prefer foreground over background (geometry ordering).
+
+a|Stretching stem:[s]
+|The unclipped area of the triangle in the target view relative to the source view.
+|Penalize triangles that stretch between foreground and background objects.
+|===
+
+[[secViewWeightingSynthesizer]]
+=== View weighting synthesizer
+
+==== Overview
+
+The view weighting synthesizer (VWS) relies on the following pipeline: 
+
+* Visibility: this step aims at generating a geometry map for the target viewport.
+First a warped geometry map is generated for each input view, by unprojecting/reprojecting pixels from this view towards the target view.
+It uses splat-based rasterization <<pbg>> instead of triangulation.
+From the warped geometry maps, a single geometry map is generated, namely the visibility map.
+This selection process is based on a pixel-wise majority voting process which takes into account the weight of each view, described in <<secWeightingStrategy>>.
+Finally, the visibility map is cleaned out using a post median filtering to remove outliers.
+* Shading: this step aims at computing the target viewport color.
+Each input view’s pixel is blended into the target viewport with a contribution/weight taking into account its consistency with the visibility map and the weight of the view it belongs to.
+Input contours are detected and discarded from the shading stage to avoid ghosting.
+
+[[secWeightingStrategy]]
+==== Weighting strategy
+
+The visibility and shading steps rely on the notion of view weighting.
+For each input view a weight is computed as: 
+
+* A function of the distance between the view position and the target viewport position in the case of tridimensional rigs,
+* A function of the distance between the target viewport position and the view forward axis for linear or planar rigs. 
+
+To check for the tridimensionality, a test on the singularity of the covariance matrix of the view positions is performed. 
+The contribution of each pixel in the visibility and shading pass is thus weighted by the contribution of its associated view. 
+However, when dealing with pruned input views, this information is incomplete and an additional step which makes use of the pruning information as defined in <<secPruningGraph>> is performed to recover proper view weight information.
+
+The weight of each non-pruned pixel is updated at the synthesis stage to take into account that it could “represent” other pruned pixels in the descendant hierarchy of the pruning graph (cf. <<imgWeightRecovery>>).
+To correctly assess the weight of a non-pruned pixel, the following procedure is applied.
+Let’s consider a non-pruned pixel _p_ of a view associated to a node _N_ of the pruning graph.
+Let’s call stem:[w_P = w_N] its initial weight (which only depends on the “distance” from the view it belongs to, to the view being synthesized).
+Then this weight is updated as follows:
+
+[start=4]
+. If the pixel _p_ reprojects into one of the pruned pixels belonging to child views (with respect to the view p belongs to) then its weight is accumulated with the weight stem:[w_O] of this “child” view (which only depends on the “distance” from this child view to the view being synthesized) by stem:[w_P := w_P  + w_O] and the process is recursively repeated to the grandchildren.
+. If the pixel _p_ does not reproject into one of its child views, then the previous rule is extended recursively to the grandchildren.
+. If the pixel _p_ reprojects into one of its child views at an unpruned pixel then its weight is let unchanged and no more inspection of the graph is performed toward grandchildren.
+
+.Graph-based pruning: weight recovery procedure
+[#imgWeightRecovery]
+image::5_renderer/weight_recovery.svg[align=center]
+
+==== Handling of inpainted data
+Some patches within the atlases belong to the inpainted background view presynthesized at the encoder side (see <<secEncoderInpainting>>). 
+They are of lower quality than the original source views. 
+That pre-inpainted data is projected to the target viewport but otherwise exluded from the steps of making a visiblity map and viewport shading. 
+Only in the shading stage where the viewport visibility is invalid, i.e missing data, the reprojected inpainted data is inserted. 
+For pixel-locations where the resulting blending weight is below a threshold and for the locations where pre-inpainted data is unavailable, the target depth is set to invalid, making them available for inpainting as a post-processing step. 
+
+
+==== Parameters
+
+The parameters of VWS are presented in <<tabVwsParams>>.
+
+.Parameters of the view weighting synthesizer
+[#tabVwsParams]
+|===
+|Parameter |Type |Description
+
+|angularScaling |float |Drives the splat size at the warping stage.
+|minimalWeight |float |Allows for splat degeneracy test at the warping stage.
+|stretchFactor |float |Limits the splat max size at the warping stage.
+|overloadFactor |float |Geometry selection parameter at the selection stage.
+|filteringPass |int |Number of median filtering pass to apply to the visibility map.
+|blendingFactor |float |Used to control the blending at the shading stage.
+|===
+
+== Viewport filtering
+=== Inpainting
+
+In order to fill holes in the virtual view, a 2-ways inpainter is used.
+For each empty pixel with no information, two neighbors are being searched: the nearest non-empty pixel at the left and at the right.
+The color of the inpainted pixel is a weighted average of colors of the left and the right neighbor, weighted by the distances to these pixels.
+In the case of significant difference between geometry value of both neighbors, the attribute of the neighbor with further geometry is copied instead of using the weighted average.
+
+However, horizontal inpainting of the virtual view would cause appearance of unnaturally-oriented lines in the case of projecting ERP images to perspective views.
+Therefore, for ERP images an additional step of changing projection type is performed, and the search of the nearest points is performed within transverse ERP images (transverse equirectangular projection – the Cassini projection <<projections>>).
+In equirectangular projection, a sphere is mapped onto a cylinder that is tangential to points on a sphere having the latitude equal to 0 degree (<<imgErpProjection>>a).
+In transverse projection, the cylinder on which the sphere is mapped is rotated by 90 degrees; it is tangential to points that have longitude equal to 0 degree (<<imgErpProjection>>b).
+It changes the properties of the equirectangular projection in such a way that the search for the nearest projected points can be performed only on the rows of the image.
+
+.Cylinders used in the projection of a sphere on a flat image in a) equirectangular projection and b) transverse equirectangular projection
+[#imgErpProjection]
+image::5_renderer/erp_projection.png[align=center]
+
+A fast approximate reprojection of equirectangular image to transverse equirectangular image is used.
+In a first step, the length of all rows in an equirectangular image is changed to correspond to the circumference of the corresponding circle on a sphere (<<imgErpReprojection>> 34a).
+In a second step, all columns of such image are expanded (<<imgErpReprojection>>b), to be of the same length (<<imgErpReprojection>>c).
+
+.Fast reprojection of an equirectangular image (a) to transverse equirectangular image (c). Black arrows show direction of change of size of respective rows and columns of images
+[#imgErpReprojection]
+image::5_renderer/erp_reprojection.png[align=center]
+
+=== Viewing space handling
+
+The viewing space controller is in charge of applying to the viewport a smooth fade out to black according to an internal fading index computed in the decoder part in the viewing space controller (value 0 means no fade).
+This module computes this index from the viewport current position and orientation and from metadata related to the geometrical dimension of the viewing space and viewing direction constraints.
+The dimension of the viewing space is defined by flag `es_primitive_operation_flag` through two operation alternatives which are either Constructed Solid Geometry (CSG) or interpolation.
+The interpolation mode makes use of metadata which lists in an ordered way the position and orientation of primitive cardinal shapes (cuboid, spheroid, half space).
+The CSG operation makes use of the elementary shapes which are themselves defined from primitive shapes either by CSG or interpolation.
+For all these modes, it is possible to compute a signed distance `SD(p)` which is zero at the frontier of the related shape, negative inside and positive outside, from which a positional fading index can be computed as follows:
+
+[source]
+----
+positional fading index( p ) = clamp(
+    (SD(p) + es_guard_band_size) / es_guard_band_size, 0, 1)
+----
+
+where `p` is the position of the viewport, and `es_guard_band_size` is the value of the signed distance from which the fading should start, and `clamp(a, min, max)` is the clamping function of a value a on the [min, max] interval.
+
+This first index should be combined multiplicatively by two orientational fading indexes related to the current viewport converted from quaternion to yaw and pitch respectively.
+For example, the direction fading index for the yaw is computed as follows:
+
+[source]
+----
+yaw fading index( p ) = clamp(
+    (abs(yaw - primitive_shape_viewing_direction_yaw_center) - 
+        primitive_shape_viewing_direction_yaw_range +
+        es_guard_band_direction_size) / es_guard_band_direction_size, 0, 1)
+----
+
+where `primitive_shape_viewing_direction_yaw_center` is the yaw converted value from the primitive viewing direction center quaternion and `yaw` is the yaw value of the viewport.
+
+The viewing direction at a given position of the viewport is obtained from the set of individual values.
+In <<imgVsCreation>>, two modes of viewing space are illustrated, as well as viewing direction with the arrows.
+
+.Illustration of VS creation with additive CSG (left) and interpolation (right)
+[#imgVsCreation]
+image::5_renderer/viewing_space_creation.svg[align=center]
+
+[[secMpiRenderer]]
+== Multi-plane image renderer
+
+The MPI renderer is simpler and faster than the MIV renderer since the complexity (visibility, anti-aliasing, etc.) is handled during the creation of the MPI and not when the view synthesis is done. 
+
+<<imgMpiRenderer>> shows the MPI version of <<imgRenderer>> for the TMIV renderer.
+As regards to the block diagram in <<imgRenderer>>, the differences are the following:
+
+* The layer depth value decoding block works on patch basis and outputs a constant depth value per patch
+* For the view synthesis, the rendering is done by projecting and blending the different layers from the closest to the farthest along each ray, taking into account the associated transparency values (reversed Painter’s algorithm  <<painter>>).
+The process operates along each ray starting from the optical center of the MPI reference view center and related to a viewport pixel, accumulates and blends the value of each MPI layer along that ray until the result increases up to the saturation value of 1.
+Since this saturation value correspond to the opaque value, there is no need to get the values of what is behind as seen from the viewport and all further layers are discarded for that ray.
+
+.Process flow for TMIV MPI renderer
+[#imgMpiRenderer]
+image::5_renderer/mpi_renderer.svg[align=center]

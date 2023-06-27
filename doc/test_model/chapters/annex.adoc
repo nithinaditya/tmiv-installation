@@ -1,0 +1,219 @@
+include::common_attributes.adoc[]
+
+[appendix]
+[[annexA]]
+= Reference software
+
+== Availability and use
+
+The reference software (TMIV-SW) including manual is publicly available on the https://gitlab.com/mpeg-i-visual/tmiv/[Gitlab server].
+
+== Software coordination
+
+In case of any related inquiries, please contact one of the software coordinators:
+
+* Bart Kroon, bart.kroon@philips.com
+* Franck Thudor, franck.thudor@interdigital.com
+* Christoph Bachhuber, christoph.bachhuber@nokia.com
+
+[appendix]
+[[annexB]]
+= Coordinate systems, projections, and camera extrinsics
+
+This section summarizes the coordinate conversions of the _hypothetical view renderer_ (HVR) and the conventions that are applied in TMIV.
+
+[[secOmaf]]
+== OMAF coordinate system
+
+Although the MIV specification is agnostic to the coordinate system of the bitstream, the TMIV world coordinate system is that of https://mpeg.chiariglione.org/standards/mpeg-i/omnidirectional-media-format[MPEG-I OMAF] as shown in <<imgOmafCosys>>.
+Coordinate axis system VUI parameters are printed by the TMIV decoder but ignored by the TMIV renderer.
+
+* stem:[\hat{x}_{\textrm{world}}] points forward (the reference direction for a viewer),
+* stem:[\hat{y}_{\textrm{world}}] points left,
+* stem:[\hat{z}_{\textrm{world}}] points up,
+
+Hereby stem:[\hat{x}, \hat{y}, \hat{z}] is the notation for Cartesian unit vectors such that stem:[\boldsymbol{x} = (x, y, z )^T = x\hat{x} + y\hat{y} + z\hat{z}].
+For an untransformed camera the origin is the cardinal point.
+
+.OMAF coordinate system illustrating the directions of positional and rotational units
+[#imgOmafCosys]
+image::annex/omaf_coordinate_system.png[width=50%, align=center]
+
+The definition of image coordinates is:
+
+* The top-left image corner is stem:[(0, 0)],
+* The top-left pixel center is at stem:[(\frac{1}{2}, \frac{1}{2})],
+* stem:[\hat{x}_{\textrm{image}}] points right,
+* stem:[\hat{y}_{\textrm{image}}] points down.
+
+Image positions are notated as stem:[\boldsymbol{u} = (u,v)^T = u\hat{x}_{\textrm{image}} + v \hat{y}_{\textrm{image}}].
+
+== Perspective projection
+
+Perspective projection requires an intrinsic matrix where all variables are in pixel units:
+
+[stem]
+++++
+M = \begin{bmatrix}
+f_x & & p_x \\
+& f_y & py \\
+& & 1
+\end{bmatrix}
+++++
+
+Projection:
+
+Taking into account the change of coordinate system, the projection equation is
+
+[stem]
+++++
+\boldsymbol{x}_{\textrm{image}} =
+
+\begin{bmatrix}
+x_{\textrm{image}} \\ y_{\textrm{image}}
+\end{bmatrix} =
+
+\begin{bmatrix}
+p_x \\ p_y
+\end{bmatrix}
+
+- x_{\textrm{world}}^{-1}
+
+\begin{bmatrix}
+f_x y_{\textrm{world}} \\
+f_y z_{\textrm{world}}
+\end{bmatrix},
+++++
+
+where stem:[\boldsymbol{x}_{\textrm{image}}] is the image position in pixel units.
+
+Unprojection:
+
+The matching projection equation is
+
+[stem]
+++++
+\boldsymbol{x}_{\textrm{world}} =
+
+\begin{bmatrix}
+x_{\textrm{world}} \\
+y_{\textrm{world}} \\
+z_{\textrm{world}} \\
+\end{bmatrix} =
+
+d
+\begin{bmatrix}
+1 \\
+f_x^{-1} (p_x - x_{\textrm{image}}) \\
+f_y^{-1} (p_y - y_{\textrm{image}})
+\end{bmatrix},
+++++
+
+where stem:[d] is geometry in meters and stem:[x_{\textrm{world}}] is the world position in meters.
+The geometry is typically stored as normalized disparities based on a configurable geometry range, however in above equation  is a length in meters.
+
+== Equirectangular projection
+
+For equirectangular projection the image is mapped on a horizontal angular range stem:[\phi_1, \phi_2] and vertical angular stem:[\theta_1, \theta_2] angle as specified in the JSON content metadata file.
+
+Unprojection:
+
+For an image size stem:[w \times h], the spherical coordinates are:
+
+[stem]
+++++
+\phi = \phi_2 + (\phi_1 - \phi_2) \frac{x_{\textrm{image}}}{w},
+++++
+
+[stem]
+++++
+\theta = \theta_2 + (\theta_1 - \theta_2) \frac{y_{\textrm{image}}}{h}.
+++++
+
+The ray direction is:
+
+[stem]
+++++
+\hat{r} = \begin{bmatrix}
+\cos{\phi} \cos{\theta} \\
+\sin{\phi} \cos{\theta} \\
+\sin{\theta}
+\end{bmatrix}
+++++
+
+and the world position is
+
+[stem]
+++++
+\boldsymbol{x}_{\textrm{world}} = r \hat{r},
+++++
+
+whereby stem:[r] is the _ray length_ which is the equivalent of geometry stem:[d] for perspective projection.
+Please note that also ray length is stored as normalized disparities based on a configurable ray length range, however in the above equation stem:[r] is a real length.
+
+Projection:
+
+The ray length and ray direction are trivially determined as
+
+[stem]
+++++
+r = | \boldsymbol{x}_{\textrm{world}} |,
+++++
+
+[stem]
+++++
+\hat{r} = \frac{\boldsymbol{x}_{\textrm{world}}} {r},
+++++
+
+making use of the fact that valid ray lengths are stem:[r>0].
+
+Finally, spherical angles are then estimated from stem:[\hat{r}]:
+
+[stem]
+++++
+\phi = \textrm{atan2} \left(
+    \langle \hat{r}, \hat{y} \rangle ,
+    \langle \hat{r}, \hat{x} \rangle
+\right)
+++++
+
+[stem]
+++++
+\theta = \sin^{-1}{\langle \hat{r}, \hat{z} \rangle}
+++++
+
+with https://en.wikipedia.org/wiki/Atan2[atan2] the full circle extension of atan. Then the image position is
+
+[stem]
+++++
+x_{\textrm{image}} = w \frac{\phi - \phi_2}{\phi_1 - \phi_2}
+++++
+
+[stem]
+++++
+y_{\textrm{image}} = w \frac{\theta - \theta_2}{\theta_1 - \theta_2}
+++++
+
+The only difference between equirectangular projection and other omnidirectional projections is the mapping between spherical coordinates and image coordinates.
+
+== Camera extrinsics
+
+The MIV specification as well as TMIV use position vectors (**t**) and https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation[unit quaternions] (_q_) to represent camera extrinsics.
+
+The sequence configuration files and pose traces use Euler angles which are https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles[converted directly upon loading].
+_Pose traces_ are comma-separated value files with the same six columns as the CTC tables and JSON metadata files: X, Y, Z, Yaw, Pitch, Roll.
+
+The two rotations and two translations to transform a point (**x**) from an input camera to a virtual (output) camera are combined into a single affine transformation (f):
+
+[stem]
+++++
+f: \boldsymbol{x} \rightarrow q \boldsymbol{x} q^* + \boldsymbol{t}
+++++
+
+
+Where
+stem:[q = q^*_{\textrm{output}} q_{\textrm{input}}]
+and
+stem:[\boldsymbol{t} = q_{\textrm{output}}
+( \boldsymbol{t}_{\textrm{input}} - \boldsymbol{t}_{\textrm{output}})
+q^*_{\textrm{output}}].

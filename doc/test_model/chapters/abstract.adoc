@@ -1,0 +1,10 @@
+:!numbered:
+
+= Abstract
+
+The Video working group has established the Draft International Standard and the 8^th^ Test Model for MPEG Immersive Video during the 133^rd^ MPEG meeting (January 2021) after evaluating the core experiment results and related contributions.
+The test model consists of this document and the reference software, providing an encoder and decoder/renderer in alignment with the specification.
+This document serves as a source of general tutorial information on the MPEG Immersive Video (MIV) design.
+It defines terminology used, process and data flow, operating modes, and description of algorithmic components adopted by the video group for the test model.
+
+:numbered:

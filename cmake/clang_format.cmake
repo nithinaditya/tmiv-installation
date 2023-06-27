@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+
+file(GLOB_RECURSE ALL_SOURCE_FILES "${ANALYZE_DIR}/*.cpp")
+file(GLOB_RECURSE ALL_HEADER_FILES "${ANALYZE_DIR}/*.h")
+file(GLOB_RECURSE ALL_TEMPLATE_FILES "${ANALYZE_DIR}/*.hpp")
+
+execute_process(COMMAND "clang-format" "-style=file" "-i" ${ALL_SOURCE_FILES} ${ALL_HEADER_FILES} ${ALL_TEMPLATE_FILES})

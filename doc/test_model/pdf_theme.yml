@@ -1,0 +1,6 @@
+# Captions inherit alignment from their images
+# To use me in pdf conversion, call `asciidoctor-pdf -a pdf-style=pdf_theme.yml file.adoc` (in addition to other arguments)
+extends: default
+image:
+  caption:
+    align: inherit

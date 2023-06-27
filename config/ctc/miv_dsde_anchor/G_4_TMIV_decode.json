@@ -1,0 +1,15 @@
+{
+    "Decoder": {
+        "geometryEdgeMagnitudeTh": 10,
+        "maxCurvature": 5,
+        "minForegroundConfidence": 0.5
+    },
+    "DecoderMethod": "Decoder",
+    "inputBitstreamPathFmt": "G{0}/{1}/TMIV_G{0}_{1}.bit",
+    "inputDirectory": ".",
+    "inputGeometryVideoFramePathFmt": "G{0}/{1}/{2}/TMIV_G{0}_{1}_{2}_geo_c{3:02}_{4}x{5}_yuv420p10le.yuv",
+    "inputTextureVideoFramePathFmt": "G{0}/{1}/{2}/TMIV_G{0}_{1}_{2}_tex_c{3:02}_{4}x{5}_yuv420p10le.yuv",
+    "outputDirectory": ".",
+    "outputMultiviewTexturePathFmt": "G{0}/{1}/{2}/TMIV_G{0}_{1}_{2}_tex_pv{3:02}_{4}x{5}_yuv420p10le.yuv",
+    "outputSequenceConfigPathFmt": "G{0}/{1}/{2}/TMIV_G{0}_{1}_{2}_{3:04}.json"
+}

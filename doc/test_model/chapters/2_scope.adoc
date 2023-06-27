@@ -1,0 +1,8 @@
+= Scope
+
+The normative decoding process for MPEG Immersive Video (MIV) is specified in the Draft International Standard (DIS) of MPEG Immersive Video <<mivDis>>.
+The TMIV reference software (<<annexA>>) provides a reference implementation of non-normative encoding and rendering techniques and the normative decoding process for the MIV standard.
+
+This document provides an algorithmic description for the TMIV encoder and decoder/renderer.
+The purpose of this document is to promote a common understanding of the coding features, in order to facilitate the assessment of the technical impact of new technologies during the standardization process.
+_Common Test Conditions for MPEG Immersive Video_ <<ctc>> provides test conditions including TMIV-based anchors.

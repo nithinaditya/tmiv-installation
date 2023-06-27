@@ -1,0 +1,15 @@
+[bibliography]
+= References
+
+- [[[cfp3dof,1]]] _Call for Proposals on 3DoF+ Visual_, ISO/IEC JTC1/SC29/WG11 N18145, Jan. 2019, Marrakesh, Morocco.
+- [[[mivDis,2]]] J. Boyce, B. Chupeau, L. Kondrad, _Text of ISO/IEC DIS 23090-12 MPEG Immersive Video_, ISO/IEC JTC1/SC29/WG04 N0049, Jan. 2021, Online.
+- [[[ctc,3]]] J. Jung, B. Kroon, _Common Test Conditions for MPEG Immersive Video_, ISO/IEC JTC1/SC29/WG04 N0051, Jan. 2021, Online.
+- [[[ivdeDoc,4]]] _Manual of Immersive Video Depth Estimation 3_, ISO/IEC JTC1/SC29/WG04 N0058, Jan. 2021, Online.
+- [[[dersDoc,5]]] _Manual of Depth Estimation Reference Software (DERS 9.0)_, ISO/IEC JTC1/SC29/WG11 N19143, Jan. 2020, Brussels, Belgium.
+- [[[rvsDoc,6]]]	_Reference View Synthesizer (RVS) manual_, ISO/IEC JTC1/SC29/WG11 N18068, Oct. 2018, Macao, China.
+- [[[projections,7]]]	J. Snyder, P. Voxland, _An album of map projections_, US Government Printing Office, Washington, 1989.
+- [[[packing,8]]]	J. Jylänki, _A thousand ways to pack the bin - a practical approach to two-dimensional rectangle bin packing_, 2010.
+- [[[pbg,9]]]	_Point-based graphics_, 2007, Elsevier, edited by Markus Gross and Hanspeter Pfister.
+- [[[viewSynthesis,10]]]	_Soft 3D Reconstruction for View Synthesis_, Eric Penner and Li Zhang, 2017, ACM Transactions on Graphics (Proc. SIGGRAPH Asia) (vol. 6).
+- [[[painter,11]]]	Wikipedia: Painter’s algorithm. Variants: Reverse painter’s algorithm.
+- [[[vpccCodec,12]]] V-PCC Codec Description, ISO/IEC JTC1/SC29/WG7 N00012, October 2020

@@ -1,0 +1,43 @@
+{
+    "attributeOffsetBitCount": 10,
+    "attributeOffsetEnabledFlag": true,
+    "blockSizeDepthQualityDependent": [ 8, 8 ],
+    "configDirectory": "config",
+    
+    "dynamicDepthRange": false,
+    "MpiEncoder": {
+        "overrideAtlasFrameSizes" : [[4096, 4096]],
+        "PackerMethod": "Packer",
+        "Packer": {
+            "enableMerging": true,
+            "MinPatchSize": 8,
+            "Overlap": 1,
+            "PiP": 1,
+            "sortingMethod": 1,
+            "enableRecursiveSplit": false
+        },
+        "TextureDilation": 2,
+        "TransparencyDynamic": 4
+    },
+    "EncoderMethod": "MpiEncoder",
+    "geometryScaleEnabledFlag": false,
+    "haveGeometryVideo": false,
+    "haveOccupancyVideo": false,
+    "haveTextureVideo": true,
+    "randomAccess": false,
+    "inputDirectory": ".",
+    "inputTransparencyPathFmt": "{1}/{3}_transparency_{4}x{5}_{6}.yuv",
+    "inputSequenceConfigPathFmt": "ctc/sequences/{1}.json",
+    "inputTexturePathFmt": "{1}/{3}_texture_{4}x{5}_{6}.yuv",
+    "intraPeriod": 32,
+    "maxAtlases": 1,
+    "oneViewPerAtlasFlag": false,
+    "outputBitstreamPathFmt": "M{0}/{1}/TMIV_M{0}_{1}.bit",
+    "outputDirectory": ".",
+    "outputTextureVideoDataPathFmt": "M{0}/{1}/TMIV_M{0}_{1}_tex_c{3:02}_{4}x{5}_yuv420p10le.yuv",
+    "outputTransparencyVideoDataPathFmt": "M{0}/{1}/TMIV_M{0}_{1}_tra_c{3:02}_{4}x{5}_yuv420p10le.yuv",
+    "depthLowQualityFlag": false,
+    "overrideAtlasFrameSizes" : [[4096, 4096]],
+    "numberOfFrames": 17,
+    "startFrame": 0
+}

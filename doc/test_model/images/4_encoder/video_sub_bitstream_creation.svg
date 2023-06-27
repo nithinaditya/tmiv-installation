@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="756"
+   height="499.99991"
+   overflow="hidden"
+   version="1.1"
+   id="svg4383"
+   sodipodi:docname="video_sub_bitstream_creation.svg"
+   style="overflow:hidden"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <metadata
+     id="metadata4387">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1703"
+     inkscape:window-height="1402"
+     id="namedview4385"
+     showgrid="false"
+     fit-margin-top="6"
+     fit-margin-left="6"
+     fit-margin-right="6"
+     fit-margin-bottom="6"
+     inkscape:zoom="0.6078125"
+     inkscape:cx="159.62802"
+     inkscape:cy="325.13931"
+     inkscape:window-x="1706"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g4381" />
+  <defs
+     id="defs4273">
+    <clipPath
+       id="clip0">
+      <path
+         d="M 0,0 H 1280 V 720 H 0 Z"
+         id="path4270"
+         inkscape:connector-curvature="0"
+         style="clip-rule:evenodd;fill-rule:evenodd" />
+    </clipPath>
+  </defs>
+  <g
+     clip-path="url(#clip0)"
+     id="g4381"
+     transform="translate(-247,-79.0001)">
+    <path
+       d="m 254.5,301.834 c 0,-10.678 8.656,-19.334 19.334,-19.334 h 159.332 c 10.678,0 19.334,8.656 19.334,19.334 v 77.332 c 0,10.678 -8.656,19.334 -19.334,19.334 H 273.834 c -10.678,0 -19.334,-8.656 -19.334,-19.334 z"
+       stroke-miterlimit="8"
+       id="path4277"
+       inkscape:connector-curvature="0"
+       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(272.216,318)"
+       id="text4285"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">VVC encoded Attribute <tspan
+   x="41.4533"
+   y="19"
+   id="tspan4279">Video Data</tspan>
+<tspan
+   x="20.893299"
+   y="38"
+   id="tspan4281">(1 subpicture per</tspan>
+<tspan
+   x="54.146702"
+   y="57"
+   id="tspan4283">picture)</tspan>
+</text>
+    <path
+       d="m 253.5,453.5 c 0,-9.941 8.059,-18 18,-18 h 162 c 9.941,0 18,8.059 18,18 v 72 c 0,9.941 -8.059,18 -18,18 h -162 c -9.941,0 -18,-8.059 -18,-18 z"
+       stroke-miterlimit="8"
+       id="path4287"
+       inkscape:connector-curvature="0"
+       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(302.611,466)"
+       id="text4295"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">VVC encoded <tspan
+   x="-27.440001"
+   y="19"
+   id="tspan4289">Geometry Video Data</tspan>
+<tspan
+   x="-10.6667"
+   y="38"
+   id="tspan4291">(1 subpicture per</tspan>
+<tspan
+   x="22.5867"
+   y="57"
+   id="tspan4293">picture)</tspan>
+</text>
+    <path
+       d="m 533.5,392.167 c 0,-7.548 6.119,-13.667 13.667,-13.667 h 113.666 c 7.548,0 13.667,6.119 13.667,13.667 v 54.666 c 0,7.548 -6.119,13.667 -13.667,13.667 H 547.167 c -7.548,0 -13.667,-6.119 -13.667,-13.667 z"
+       stroke-miterlimit="8"
+       id="path4297"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(553.947,406)"
+       id="text4303"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">Packing using<tspan
+   x="-7.0866699"
+   y="19"
+   id="tspan4299">SubpicMergeAp</tspan>
+<tspan
+   x="45.166698"
+   y="38"
+   id="tspan4301">p</tspan>
+</text>
+    <path
+       d="m 452,339 h 42.579 v 60.328 l -1,-1 h 34.913 v 2 H 492.579 V 340 l 1,1 H 452 Z m 75.159,56.328 8,4 -8,4 z"
+       id="path4305"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 0,-1 h 42.5794 v 64.0081 l -1,-1 h 34.9128 v 2 H 40.5794 V 0 l 1,1 H 0 Z m 75.1588,60.0081 8,4 -8,4 z"
+       transform="matrix(1,0,0,-1,451,489.008)"
+       id="path4307"
+       inkscape:connector-curvature="0" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(487.49,308)"
+       id="text4319"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">VVC<tspan
+   x="-26.7467"
+   y="19"
+   id="tspan4309">bitstream</tspan>
+<tspan
+   x="54.919998"
+   y="19"
+   id="tspan4311">1</tspan>
+<tspan
+   x="-2.5801101"
+   y="205"
+   id="tspan4313">VVC</tspan>
+<tspan
+   x="-26.746799"
+   y="224"
+   id="tspan4315">bitstream</tspan>
+<tspan
+   x="54.919899"
+   y="224"
+   id="tspan4317">2</tspan>
+</text>
+    <path
+       d="m 674,418 h 136.486 v 2 H 674 Z m 135.152,-3 8,4 -8,4 z"
+       id="path4321"
+       inkscape:connector-curvature="0" />
+    <text
+       font-weight="400"
+       font-size="19"
+       transform="translate(682.593,405)"
+       id="text4325"
+       style="font-weight:400;font-size:19px;font-family:Arial, Arial_MSFontService, sans-serif">VVC <tspan
+   x="43.666698"
+   y="0"
+   id="tspan4323">bitstream</tspan>
+</text>
+    <path
+       d="m 817.5,372.167 c 0,-13.071 10.596,-23.667 23.667,-23.667 h 131.666 c 13.071,0 23.667,10.596 23.667,23.667 v 94.666 c 0,13.071 -10.596,23.667 -23.667,23.667 H 841.167 c -13.071,0 -23.667,-10.596 -23.667,-23.667 z"
+       stroke-miterlimit="8"
+       id="path4327"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(859.095,399)"
+       id="text4333"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Multiplex<tspan
+   font-size="16"
+   x="-21.333401"
+   y="21"
+   id="tspan4329"
+   style="font-size:16px">V3C multiplexing to</tspan>
+<tspan
+   font-size="16"
+   x="-8.08002"
+   y="41"
+   id="tspan4331"
+   style="font-size:16px">V3C_PVD units</tspan>
+</text>
+    <path
+       d="m 606.5,252.333 c 0,-2.669 2.164,-4.833 4.833,-4.833 h 19.334 c 2.669,0 4.833,2.164 4.833,4.833 v 20.334 c 0,2.669 -2.164,4.833 -4.833,4.833 h -19.334 c -2.669,0 -4.833,-2.164 -4.833,-4.833 z"
+       stroke-miterlimit="8"
+       id="path4335"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <path
+       d="m 605.5,285.5 c 0,-2.761 2.239,-5 5,-5 h 20 c 2.761,0 5,2.239 5,5 v 21 c 0,2.761 -2.239,5 -5,5 h -20 c -2.761,0 -5,-2.239 -5,-5 z"
+       stroke-miterlimit="8"
+       id="path4337"
+       inkscape:connector-curvature="0"
+       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="15"
+       transform="translate(641.531,269)"
+       id="text4343"
+       style="font-weight:400;font-size:15px;font-family:Arial, Arial_MSFontService, sans-serif">Bitstream formatting<tspan
+   x="0"
+   y="33"
+   id="tspan4339">Video encoding</tspan>
+<tspan
+   x="-34.175999"
+   y="-37"
+   id="tspan4341">Color code</tspan>
+</text>
+    <path
+       d="m 607.355,234.262 h 17.75 17.75 17.75 17.75 v 1 h -17.75 -17.75 -17.75 -17.75 z"
+       id="path4345"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 253.5,160.667 c 0,-10.586 8.581,-19.167 19.167,-19.167 h 159.666 c 10.586,0 19.167,8.581 19.167,19.167 v 76.666 c 0,10.586 -8.581,19.167 -19.167,19.167 H 272.667 c -10.586,0 -19.167,-8.581 -19.167,-19.167 z"
+       stroke-miterlimit="8"
+       id="path4347"
+       inkscape:connector-curvature="0"
+       style="fill:#fbe5d6;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="16"
+       transform="translate(281.778,196)"
+       id="text4351"
+       style="font-weight:400;font-size:16px;font-family:Arial, Arial_MSFontService, sans-serif">packing parameters<tspan
+   x="50.0867"
+   y="19"
+   id="tspan4349">(json)</tspan>
+</text>
+    <path
+       d="m 451,198 h 456.485 v 143.308 h -2 V 199 l 1,1 H 451 Z m 459.485,141.975 -4,8 -4,-8 z"
+       id="path4353"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 605.5,318.5 c 0,-2.761 2.239,-5 5,-5 h 20 c 2.761,0 5,2.239 5,5 v 21 c 0,2.761 -2.239,5 -5,5 h -20 c -2.761,0 -5,-2.239 -5,-5 z"
+       stroke-miterlimit="8"
+       id="path4355"
+       inkscape:connector-curvature="0"
+       style="fill:#fbe5d6;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="15"
+       transform="translate(642.103,335)"
+       id="text4357"
+       style="font-weight:400;font-size:15px;font-family:Arial, Arial_MSFontService, sans-serif">Packing parameters</text>
+    <rect
+       x="838.5"
+       y="514.5"
+       width="137"
+       height="58"
+       stroke-miterlimit="8"
+       id="rect4359"
+       style="fill:#ffffff;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="21"
+       transform="translate(862.845,539)"
+       id="text4363"
+       style="font-weight:400;font-size:21px;font-family:Arial, Arial_MSFontService, sans-serif">Bitstream<tspan
+   font-size="14"
+   x="16.2467"
+   y="18"
+   id="tspan4361"
+   style="font-size:14px">(one file)</tspan>
+</text>
+    <path
+       d="m 907,490 v 17.07 h -2 V 490 Z m 3,15.737 -4,8 -4,-8 z"
+       id="path4365"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 939,182 v 159.633 h -2 V 182 Z m 3,158.299 -4,8 -4,-8 z"
+       id="path4367"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m 701.5,101.334 c 0,-8.7449 7.089,-15.8339 15.834,-15.8339 h 263.332 c 8.745,0 15.834,7.089 15.834,15.8339 v 63.332 c 0,8.745 -7.089,15.834 -15.834,15.834 H 717.334 c -8.745,0 -15.834,-7.089 -15.834,-15.834 z"
+       stroke-miterlimit="8"
+       id="path4369"
+       inkscape:connector-curvature="0"
+       style="fill:#ffe699;fill-rule:evenodd;stroke:#000000;stroke-miterlimit:8" />
+    <text
+       font-weight="400"
+       font-size="24"
+       transform="translate(810.159,118)"
+       id="text4379"
+       style="font-weight:400;font-size:24px;font-family:Arial, Arial_MSFontService, sans-serif">Format<tspan
+   x="-12.6667"
+   y="29"
+   id="tspan4371">Bitstream</tspan>
+<tspan
+   font-size="14"
+   x="-92.5"
+   y="48"
+   id="tspan4373"
+   style="font-size:14px">(V3C sample stream with MIV extensions)</tspan>
+<tspan
+   x="-647.55103"
+   y="504"
+   id="tspan4375" />
+</text>
+  </g>
+</svg>

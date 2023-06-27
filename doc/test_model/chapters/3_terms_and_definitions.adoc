@@ -1,0 +1,41 @@
+= Terms and Definitions
+
+For the purpose of this document, the following definitions apply in addition to the definitions in MIV specification <<mivDis>> clause 3.
+
+ifndef::backend-pdf[]
+.Click to view the table
+[%collapsible]
+====
+endif::[]
+
+.Terminology definitions used for TMIV
+|===
+|Term |Definition
+
+|_Additional view_ |A source view that is to be pruned and packed in multiple patches.
+|_Basic view_ |A source view that is packed in an atlas as a single patch.
+|_Clustering_ |Combining pixels in a pruning mask to form patches.
+|_Culling_ |Discarding part of a rendering input based on target viewport visibility tests.
+|_Entity_ |An abstract concept to be defined in another standard. For example, entities may either represent different physical objects, or a segmentation of the scene based on aspects such as reflectance properties, or material definitions.
+|_Entity component_ |A multi-level map indicating the entity of each pixel in a corresponding view representation.
+|_Entity layer_ |A view representation of which all samples are either part of a single entity or non-occupied.
+|_Entity separation_ |Extracting an entity layer per a view representation that includes the desired entity component.
+|_Geometry scaling_ |Scaling of the geometry data prior to encoding, and reconstructing the nominal resolution geometry data at the decoder side.
+|_Inpainting_ |Filling missing pixels with matching values prior to outputting a requested target view.
+|_Mask aggregation_ |Combination of pruning masks over a number of frames, resulting in an aggregated pruning mask.
+|_Metadata merging_ |Combining parameters of encoded atlas groups.
+|_Occupancy scaling_ |Scaling of the occupancy data prior to encoding, and reconstructing the nominal resolution occupancy data at the decoder side.
+|_Omnidirectional view_ |A view representation that enables rendering according to the user's viewing orientation, if consumed with a head-mounted device, or according to user's desired viewport otherwise, as if the user was in the spot where and when the view was captured.
+|_Patch packing_ |Placing patches into an atlas without overlap of the occupied regions, resulting in patch parameters.
+|_Pose trace_ |A navigation path of a virtual camera or an active viewer navigating the immersive content over time. It sets the view parameters per frame.
+|_Pruning_ |Measuring the interview redundancy in additional views resulting in pruning masks.
+|_Pruning mask_ |A mask on a view representation that indicates which pixels should be preserved. All other pixels may be pruned.
+|_Source splitting_ |Partitioning views into multiple spatial groups to produce separable atlases.
+|_Source view_ |Indicates source video material before encoding that corresponds to the format of a view representation, which may have been acquired by capture of a 3D scene by a real camera or by projection by a virtual camera onto a surface using source view parameters.
+|_Target view_ |Indicates either perspective viewport or omnidirectional view at the desired viewing position and orientation.
+|_View labeling_ |Classifying the source views as basic views or additional views.
+|===
+
+ifndef::backend-pdf[]
+====
+endif::[]

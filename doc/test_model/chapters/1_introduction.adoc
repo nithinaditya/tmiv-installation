@@ -1,0 +1,12 @@
+= Introduction
+
+The MPEG-I project (ISO/IEC 23090) on _coded representation of immersive media_ includes Part 2 _Omnidirectional MediA Format_ (OMAF) version 1 published in 2018 that supports 3 Degrees of Freedom (3DoF), where a user’s position is static but his/her head can yaw, pitch and roll.
+However, rendering flat 360° video, _i.e._ supporting head rotations only, may generate visual discomfort especially when objects close to the viewer are rendered.
+6DoF enables translation movements in horizontal, vertical, and depth directions in addition to 3DoF orientations.
+The translation support enables interactive motion parallax providing viewers with natural cues to their visual system and resulting in an enhanced perception of volume around them.
+At the 125^th^ MPEG meeting, a call for proposals <<cfp3dof>> was issued to enable head-scale movements within a limited space.
+This has resulted in the new part ISO/IEC 23090-12 _Immersive Video_ (MIV).
+
+At the 129^th^ MPEG meeting the fourth working draft of MIV has been realigned to use ISO/IEC 23090-5 _Video-based Point Cloud Compression_ (V-PCC) as a normative reference for terms, definitions, syntax, semantics and decoding processes.
+At the 130^th^ MPEG meeting this alignment has been completed by restructuring Part 5 in a common specification _Visual Volumetric Video-based Coding_ (V3C) and annex H _Video-based Point Cloud Compression_ (V-PCC).
+V3C provides extension mechanisms for V-PCC and MIV. The terminology in this document reflects that of V3C and MIV.
